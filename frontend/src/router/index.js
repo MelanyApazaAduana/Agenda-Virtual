@@ -23,6 +23,7 @@ const routes = [
     path: '/login',
     name: 'login',
     component: LoginView,
+    meta: { layout: 'AuthLayout' }
   },
   {
     path: '/calendario',
