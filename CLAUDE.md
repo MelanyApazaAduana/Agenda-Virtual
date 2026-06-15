@@ -5,7 +5,15 @@
 - **Frontend**: Vue 3 + Vite, JavaScript (no TypeScript), Pinia, Axios, Tailwind CSS 3, VueUse, Day.js
 
 ---
-
+## codigo - reglas 
+**hacer**
+- Las variables y funciones creadas deben nombrarse en español 
+- Se permite mantener el idioma orignal si:
+ - son palabras reservadas del lenguaje 
+ - APIs nativas del lenguaje 
+ - librerias externas 
+ - frameworks 
+--
 ## Backend — reglas
 
 **Estructura de carpetas**
@@ -97,7 +105,7 @@ PORT=3000
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=secret
-DB_NAME=myapp_db
+DB_NAME=agenda_virtual
 JWT_SECRET=...
 CORS_ORIGIN=http://localhost:5173
 

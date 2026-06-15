@@ -1,5 +1,5 @@
-const mysql = require('mysql2');
-const dotenv = require('dotenv');
+import mysql from 'mysql2';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -17,13 +17,18 @@ const pool = mysql.createPool({
 const promisePool = pool.promise();
 
 // Probar conexión al iniciar
-(async () => {
+export const testConnection = async () => {
     try {
-        const [result] = await promisePool.query('SELECT 1');
-        console.log('Conexion a la base de datos establecida correctamente');
+        const connection = await promisePool.getConnection()
+        console.log('Conexion a la base de datos establecida correctamente')
+        if (connection && connection.release) {
+            connection.release()
+        }
+        return true
     } catch (error) {
-        console.error('Error conectando a la base de datos:', error.message);
+        console.error('Error conectando a la base de datos:', error.message)
+        return false
     }
-})();
+}
 
-module.exports = promisePool;
+export default promisePool;

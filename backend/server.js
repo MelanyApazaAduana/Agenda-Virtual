@@ -1,27 +1,52 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
+import express from 'express'
+import cors from 'cors'
+import session from 'express-session'
+import dotenv from 'dotenv'
+import passport from './config/passport.js'
+import authRoutes from './routes/authRoutes.js'
+import { testConnection } from './config/database.js'
 
-dotenv.config();
+dotenv.config()
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-const pool = require('./config/database');
+const app = express()
+const PORT = process.env.PORT || 3000
 
 // Middlewares
-app.use(cors());           // Permite peticiones desde frontend (Vue)
-app.use(express.json());   // Para recibir JSON en las peticiones
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+    origin: 'http://localhost:5173', 
+    credentials: true
+}))           
+app.use(express.json());   
+app.use(express.urlencoded({ extended: true }))
 
+// Configuración de sesión
+app.use(session({
+    secret: process.env.SESSION_SECRET ,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,  
+        maxAge: 24 * 60 * 60 * 1000  // 24 horas
+    }
+}))
+
+// Inicializar Passport
+app.use(passport.initialize())
+app.use(passport.session())
+
+// Rutas
+app.use('/auth', authRoutes)
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'API funcionando' });
-});
+    res.json({ 
+        status: 'OK', 
+        message: 'Servidor funcionando',
+        autenticado: req.isAuthenticated() || false
+    })
+})
 
-// Importar rutas (las crearemos luego)
-// app.use('/api/eventos', require('./routes/api'));
-
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+    await testConnection()
+})

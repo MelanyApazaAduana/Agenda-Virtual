@@ -154,6 +154,11 @@
 <script setup>
 import { ref } from 'vue'
 import ModalCrearEvento from '@/components/eventos/ModalCrearEvento.vue'
+import { useUsuarioStore } from '../stores/usuarioStore'
+import { storeToRefs } from 'pinia'
+
+const usuarioStore = useUsuarioStore()
+const { usuario } = storeToRefs(usuarioStore)
 
 const vistaActual = ref('mes')
 const mostrarModal = ref(false)
