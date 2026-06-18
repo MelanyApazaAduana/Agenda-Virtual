@@ -1,18 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import axios from 'axios'
 import { useUsuarioStore } from '../stores/usuarioStore'
-
-//import LoginView from '@/views/LoginView.vue'
-import DashboardCalendarioView from '@/views/DashboardCalendarioView.vue'
-import GestionTareasView from '@/views/GestionTareasView.vue'
-import GestionNotasView from '@/views/GestionNotasView.vue'
-import GestionProductividadView from '@/views/GestionProductividadView.vue'
-import GestionUsuariosView from '@/views/GestionUsuariosView.vue'
-
-axios.defaults.withCredentials = true
 
 const LoginView = () => import('@/views/LoginView.vue')
 const CalendarioView = () => import('@/views/DashboardCalendarioView.vue')
+const GestionTareasView = () => import('@/views/GestionTareasView.vue')
+const GestionNotasView = () => import('@/views/GestionNotasView.vue')
+const GestionProductividadView = () => import('@/views/GestionProductividadView.vue')
+const GestionUsuariosView = () => import('@/views/GestionUsuariosView.vue')
+const RegistrarIngresoView = () => import('@/views/RegistrarIngresoView.vue')
+const ReportesFinancierosView = () => import('@/views/ReportesFinancierosView.vue')
 
 const routes = [
   {
@@ -29,31 +25,43 @@ const routes = [
     path: '/calendario',
     name: 'calendario',
     component: CalendarioView,
-    meta: { requiereAuth: true }
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
   },
   {
     path: '/tareas',
     name: 'tareas',
     component: GestionTareasView,
-    meta: { layout: 'DashboardLayout' }
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
   },
   {
     path: '/notas',
     name: 'notas',
     component: GestionNotasView,
-    meta: { layout: 'DashboardLayout' }
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
   },
   {
     path: '/productividad',
     name: 'productividad',
     component: GestionProductividadView,
-    meta: { layout: 'DashboardLayout' }
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
   },
   {
     path: '/usuarios',
     name: 'usuarios',
     component: GestionUsuariosView,
-    meta: { layout: 'DashboardLayout' }
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/ingresos/registrar',
+    name: 'registrar-ingreso',
+    component: RegistrarIngresoView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/ingresos/reportes',
+    name: 'reportes-financieros',
+    component: ReportesFinancierosView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
   }
 ]
 

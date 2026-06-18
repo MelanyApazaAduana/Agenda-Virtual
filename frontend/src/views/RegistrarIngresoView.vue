@@ -32,6 +32,22 @@
         </div>
 
         <div>
+          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Categoría</label>
+          <div class="relative">
+            <select v-model="formulario.categoria_id"
+              class="w-full pl-4 pr-10 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-800 appearance-none cursor-pointer">
+              <option :value="null">Seleccionar...</option>
+              <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.nombre }}</option>
+            </select>
+            <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <div>
           <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Fuente</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -45,29 +61,13 @@
         </div>
 
         <div>
-          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Categoría</label>
-          <div class="relative">
-            <select v-model="formulario.categoria"
-              class="w-full pl-4 pr-10 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-800 appearance-none cursor-pointer">
-              <option value="">Seleccionar...</option>
-              <option value="salario">Salario</option>
-              <option value="freelance">Freelance</option>
-              <option value="inversion">Inversión</option>
-              <option value="venta">Venta</option>
-              <option value="otros">Otros</option>
-            </select>
-            <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-              </svg>
-            </span>
-          </div>
-        </div>
-
-        <div>
           <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Detalle</label>
           <textarea v-model="formulario.detalle" rows="3" placeholder="Descripción opcional del ingreso..."
             class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black focus:border-black outline-none transition text-sm text-gray-800 placeholder-gray-400 resize-none"></textarea>
+        </div>
+
+        <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+          {{ error }}
         </div>
 
         <div class="pt-4 border-t border-gray-200 flex justify-end items-center gap-6">
@@ -75,9 +75,10 @@
             class="text-sm font-bold text-gray-600 hover:text-gray-900 transition">
             Cancelar
           </button>
-          <button type="submit"
-            class="px-6 py-2.5 text-sm font-bold text-white bg-black rounded-xl hover:bg-zinc-800 transition shadow-lg shadow-black/10 active:scale-[0.99]">
-            Guardar Ingreso
+          <button type="submit" :disabled="enviando"
+            class="px-6 py-2.5 text-sm font-bold text-white bg-black rounded-xl hover:bg-zinc-800 transition shadow-lg shadow-black/10 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed">
+            <span v-if="enviando">Guardando...</span>
+            <span v-else>Guardar Ingreso</span>
           </button>
         </div>
 
@@ -87,33 +88,58 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { crearIngreso } from '@/api/ingresos.js'
+import { listarCategoriasPorTipo } from '@/api/categorias.js'
 
 const router = useRouter()
+const enviando = ref(false)
+const error = ref('')
+const categorias = ref([])
 
 const hoy = new Date().toISOString().split('T')[0]
 
 const formulario = ref({
   monto: null,
   fecha: hoy,
+  categoria_id: null,
   fuente: '',
-  categoria: '',
   detalle: ''
 })
 
-const guardarIngreso = () => {
+onMounted(async () => {
+  try {
+    const respuesta = await listarCategoriasPorTipo('ingreso')
+    categorias.value = respuesta.data.data || []
+  } catch (e) {
+    console.error('Error al cargar categorías:', e)
+  }
+})
+
+const guardarIngreso = async () => {
   if (!formulario.value.monto || Number(formulario.value.monto) <= 0) {
-    alert('El monto es requerido y debe ser mayor a 0')
+    error.value = 'El monto es requerido y debe ser mayor a 0'
     return
   }
-  console.log('--- INGRESO REGISTRADO ---')
-  console.log('Monto:', formulario.value.monto)
-  console.log('Fecha:', formulario.value.fecha)
-  console.log('Fuente:', formulario.value.fuente)
-  console.log('Categoría:', formulario.value.categoria)
-  console.log('Detalle:', formulario.value.detalle)
-  router.push('/calendario')
+
+  enviando.value = true
+  error.value = ''
+
+  try {
+    await crearIngreso({
+      monto: formulario.value.monto,
+      fecha: formulario.value.fecha,
+      categoria_id: formulario.value.categoria_id,
+      fuente: formulario.value.fuente || null,
+      detalle: formulario.value.detalle || null
+    })
+    router.push('/calendario')
+  } catch (e) {
+    error.value = e.response?.data?.mensaje || e.response?.data?.message || 'Error al registrar el ingreso'
+  } finally {
+    enviando.value = false
+  }
 }
 
 const cancelar = () => {
