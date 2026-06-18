@@ -2,8 +2,16 @@ import express from 'express'
 import cors from 'cors'
 import session from 'express-session'
 import dotenv from 'dotenv'
+import cron from 'node-cron';
+
 import passport from './config/passport.js'
 import authRoutes from './routes/authRoutes.js'
+import categoriaRoutes from './routes/categoriaRoutes.js'
+import tareaRoutes from './routes/tareaRoutes.js'
+import eventoRoutes from './routes/eventoRoutes.js'
+import ingresoRoutes from './routes/ingresoRoutes.js'
+import EventoModel from './models/EventoModel.js'
+
 import { testConnection } from './config/database.js'
 
 dotenv.config()
@@ -35,7 +43,15 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 // Rutas
-app.use('/auth', authRoutes)
+app.use('/auth', authRoutes);
+
+app.use('/categorias', categoriaRoutes);
+
+app.use('/eventos', eventoRoutes);
+
+app.use('/tareas', tareaRoutes);
+
+app.use('/ingresos', ingresoRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
@@ -45,6 +61,33 @@ app.get('/api/health', (req, res) => {
         autenticado: req.isAuthenticated() || false
     })
 })
+
+cron.schedule('0 * * * *', async () => {
+    console.log('🔄 Ejecutando actualización automática de estados...');
+    try {
+        const resultado = await EventoModel.actualizarEstadosAutomaticos(null);
+        if (resultado.actualizados > 0) {
+            console.log(`Estados actualizados: ${resultado.actualizados} eventos`);
+        }else {
+            console.log(`No hay eventos para actualizar`);
+        }
+    } catch (error) {
+        console.error('Error en actualización automática:', error.message);
+    }
+});
+
+// Ejecutar una vez al iniciar el servidor (opcional)
+// setTimeout(async () => {
+//     console.log('🔄 [INICIO] Ejecutando primera actualización de estados...');
+//     try {
+//         const resultado = await EventoModel.actualizarEstadosAutomaticos(null);
+//         if (resultado.actualizados > 0) {
+//             console.log(`✅ [INICIO] Estados actualizados: ${resultado.actualizados} eventos`);
+//         }
+//     } catch (error) {
+//         console.error('❌ [INICIO] Error en actualización inicial:', error.message);
+//     }
+// }, 5000); // Espera 5 segundos después de iniciar
 
 app.listen(PORT, async () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
