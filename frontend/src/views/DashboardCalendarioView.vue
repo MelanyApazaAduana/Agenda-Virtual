@@ -1,218 +1,400 @@
 <template>
-  <header class="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0">
-    <div class="flex items-center gap-4">
-      <button @click="irAHoy" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">Hoy</button>
-      <div class="flex items-center gap-3 text-lg font-bold text-gray-800">
-        <button @click="cambiarMes(-1)" class="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">&lt;</button>
-        {{ mesActual }}
-        <button @click="cambiarMes(1)" class="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">&gt;</button>
+  <div class="h-full flex flex-col">
+    <header class="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0">
+      <div class="flex items-center gap-4">
+        <button @click="irAHoy" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">Hoy</button>
+        <div class="flex items-center gap-3 text-lg font-bold text-gray-800">
+          <button @click="cambiarMes(-1)" class="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">&lt;</button>
+          {{ mesActualLabel }}
+          <button @click="cambiarMes(1)" class="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">&gt;</button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <div v-if="cargando" class="text-xs text-gray-400 font-medium">Cargando...</div>
+        <div class="flex bg-gray-100 p-1 rounded-lg">
+          <button @click="vistaActual = 'mes'" class="px-4 py-1.5 text-sm font-medium rounded-md transition"
+            :class="vistaActual === 'mes' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'">Mes</button>
+        </div>
+      </div>
+    </header>
+
+    <div v-if="!cargando" class="flex-1 flex flex-col overflow-hidden">
+      <div class="grid grid-cols-7 border-b border-gray-200 bg-white">
+        <div v-for="dia in diasSemana" :key="dia" class="py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-widest border-r border-gray-200 last:border-0">
+          {{ dia }}
+        </div>
+      </div>
+      <div :class="diaSeleccionado !== null ? 'grid grid-cols-7 grid-rows-5 bg-gray-200 gap-px overflow-y-auto' : 'flex-1 grid grid-cols-7 grid-rows-5 bg-gray-200 gap-px'">
+        <div
+          v-for="diaNum in totalDiasMes" :key="diaNum"
+          @click="seleccionarDia(diaNum)"
+          class="bg-white p-2 flex flex-col hover:bg-gray-50 transition min-h-[90px] cursor-pointer relative"
+          :class="{ 'ring-2 ring-black ring-inset': diaSeleccionado === diaNum }"
+        >
+          <span
+            class="text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full mb-1"
+            :class="esHoy(diaNum) ? 'bg-black text-white' : diaSeleccionado === diaNum && !esHoy(diaNum) ? 'bg-gray-200 text-gray-900' : 'text-gray-700'"
+          >{{ diaNum }}</span>
+
+          <div class="flex-1 space-y-1 overflow-y-auto no-scrollbar">
+            <div v-for="evento in eventosDelDia(diaNum)" :key="'e-' + evento.id"
+                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate bg-blue-50 text-blue-700 border-l-2 border-blue-500">
+              {{ truncarTexto(evento.titulo, 15) }}
+            </div>
+            <div v-for="tarea in tareasDelDia(diaNum)" :key="'t-' + tarea.id"
+                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate bg-green-50 text-green-700 border-l-2 border-green-500">
+              {{ truncarTexto(tarea.titulo, 15) }}
+            </div>
+            <div v-for="nota in notasDelDia(diaNum)" :key="'n-' + nota.id"
+                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate bg-yellow-50 text-yellow-700 border-l-2 border-yellow-500">
+              {{ truncarTexto(nota.titulo, 15) }}
+            </div>
+          </div>
+
+          <div class="flex gap-1 mt-auto pt-1">
+            <span v-if="eventosDelDia(diaNum).length" class="w-1.5 h-1.5 rounded-full bg-blue-500" title="Eventos"></span>
+            <span v-if="tareasDelDia(diaNum).length" class="w-1.5 h-1.5 rounded-full bg-green-500" title="Tareas"></span>
+            <span v-if="notasDelDia(diaNum).length" class="w-1.5 h-1.5 rounded-full bg-yellow-500" title="Notas"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Day Detail Panel Inline -->
+      <div v-if="diaSeleccionado !== null" class="border-t border-gray-200 bg-white shrink-0 max-h-[280px] overflow-y-auto">
+        <div class="px-6 py-3 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white">
+          <h3 class="text-sm font-bold text-gray-900">
+            {{ diaSeleccionado }} de {{ mesActualLabel }}
+            <span v-if="itemsDiaSeleccionado.length" class="text-gray-400 font-normal ml-1">· {{ itemsDiaSeleccionado.length }} registros</span>
+          </h3>
+          <div class="flex items-center gap-2">
+            <button @click="abrirFormulario('evento')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">+ Evento</button>
+            <button @click="abrirFormulario('tarea')" class="px-3 py-1.5 text-xs font-semibold bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition">+ Tarea</button>
+            <button @click="abrirFormulario('nota')" class="px-3 py-1.5 text-xs font-semibold bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition">+ Nota</button>
+            <button @click="cerrarDetalleDia" class="text-gray-400 hover:text-gray-600 transition ml-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="px-6 py-3 space-y-4">
+          <div v-if="!itemsDiaSeleccionado.length" class="text-center py-6 text-gray-400">
+            <p class="text-sm">No hay registros para este día</p>
+          </div>
+
+          <div v-if="eventosDiaSeleccionado.length">
+            <h4 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span> Eventos ({{ eventosDiaSeleccionado.length }})
+            </h4>
+            <div class="space-y-1.5">
+              <div v-for="item in eventosDiaSeleccionado" :key="item.id"
+                   class="bg-blue-50 rounded-lg px-4 py-2.5 border-l-4 border-blue-500">
+                <p class="text-sm font-semibold text-gray-900">{{ item.titulo }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ formatoHora(item.fecha_inicio) }} - {{ formatoHora(item.fecha_fin) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="tareasDiaSeleccionado.length">
+            <h4 class="text-xs font-bold text-green-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-green-500"></span> Tareas ({{ tareasDiaSeleccionado.length }})
+            </h4>
+            <div class="space-y-1.5">
+              <div v-for="item in tareasDiaSeleccionado" :key="item.id"
+                   class="bg-green-50 rounded-lg px-4 py-2.5 border-l-4 border-green-500">
+                <p class="text-sm font-semibold text-gray-900">{{ item.titulo }}</p>
+                <p class="text-xs text-gray-500 mt-0.5 capitalize">{{ item.estado }} · {{ item.prioridad }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="notasDiaSeleccionado.length">
+            <h4 class="text-xs font-bold text-yellow-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-yellow-500"></span> Notas ({{ notasDiaSeleccionado.length }})
+            </h4>
+            <div class="space-y-1.5">
+              <div v-for="item in notasDiaSeleccionado" :key="item.id"
+                   class="bg-yellow-50 rounded-lg px-4 py-2.5 border-l-4 border-yellow-500">
+                <p class="text-sm font-semibold text-gray-900">{{ item.titulo }}</p>
+                <p v-if="item.contenido" class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ item.contenido }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="flex items-center gap-6">
-      <div v-if="cargando" class="text-xs text-gray-400 font-medium">Cargando eventos...</div>
-      <div class="flex bg-gray-100 p-1 rounded-lg">
-        <button
-          @click="vistaActual = 'dia'"
-          class="px-4 py-1.5 text-sm font-medium rounded-md transition"
-          :class="vistaActual === 'dia' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
-        >Día</button>
-        <button
-          @click="vistaActual = 'semana'"
-          class="px-4 py-1.5 text-sm font-medium rounded-md transition"
-          :class="vistaActual === 'semana' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
-        >Semana</button>
-        <button
-          @click="vistaActual = 'mes'"
-          class="px-4 py-1.5 text-sm font-medium rounded-md transition"
-          :class="vistaActual === 'mes' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
-        >Mes</button>
-      </div>
-
-      <div class="w-8 h-8 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-full cursor-pointer border-2 border-white shadow-sm"></div>
-    </div>
-  </header>
-
-  <div v-if="!cargando && vistaActual === 'mes'" class="flex-1 flex flex-col bg-gray-50">
-    <div class="grid grid-cols-7 border-b border-gray-200 bg-white">
-      <div v-for="dia in diasSemana" :key="dia" class="py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-widest border-r border-gray-200 last:border-0">
-        {{ dia }}
+    <div v-else class="flex-1 flex items-center justify-center bg-gray-50">
+      <div class="flex flex-col items-center gap-3">
+        <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+        <span class="text-sm text-gray-400">Cargando...</span>
       </div>
     </div>
-    <div class="flex-1 grid grid-cols-7 grid-rows-5 bg-gray-200 gap-px">
-      <div v-for="diaNum in totalDiasMes" :key="diaNum" class="bg-white p-2 flex flex-col hover:bg-gray-50 transition min-h-[100px]">
-        <span
-          class="text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full mb-1"
-          :class="diaNum === diaHoy && mesActual === mesHoyLabel && anioActual === anioHoy ? 'bg-black text-white' : 'text-gray-700'"
-        >{{ diaNum }}</span>
-        <div class="flex-1 space-y-1 overflow-y-auto mt-1 no-scrollbar">
-          <div v-for="evento in eventosDelDia(diaNum)" :key="evento.id"
-               :class="`text-xs px-2 py-1 rounded-md font-medium truncate ${claseColorEvento(evento.color_etiqueta)}`">
-            <span class="font-bold">{{ formatoHora(evento.fecha_inicio) }}</span> {{ evento.titulo }}
+
+    <!-- Nuevo Menu -->
+    <AppFab @crear="abrirFormulario" />
+
+    <!-- Modal Crear Evento -->
+    <ModalCrearEvento v-if="modalTipo === 'evento'" @cerrar="cerrarModal" @guardar="guardarEvento" />
+
+    <!-- Modal Crear Tarea -->
+    <div v-if="modalTipo === 'tarea'" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans" @click.self="cerrarModal">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="bg-gray-50/80 px-6 py-5 border-b border-gray-200 flex items-start justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">Nueva Tarea</h2>
+            <p class="text-xs text-gray-500 mt-1">Agrega una tarea para {{ fechaFormateadaParaCreacion }}</p>
+          </div>
+          <button @click="cerrarModal" class="text-gray-500 hover:text-gray-800 transition mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-6 space-y-5">
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Título</label>
+            <input v-model="formTarea.titulo" type="text" placeholder="Nombre de la tarea"
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black focus:border-black outline-none transition text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Prioridad</label>
+            <select v-model="formTarea.prioridad"
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm appearance-none">
+              <option value="baja">Baja</option>
+              <option value="media">Media</option>
+              <option value="alta">Alta</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          </div>
+          <div class="pt-4 border-t border-gray-200 flex justify-end gap-4">
+            <button @click="cerrarModal" class="text-sm font-semibold text-gray-500 hover:text-gray-800 transition">Cancelar</button>
+            <button @click="guardarTarea" class="px-6 py-2.5 text-sm font-bold text-white bg-black rounded-xl hover:bg-zinc-800 transition shadow-lg shadow-black/10">Guardar Tarea</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Crear Nota -->
+    <div v-if="modalTipo === 'nota'" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans" @click.self="cerrarModal">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="bg-gray-50/80 px-6 py-5 border-b border-gray-200 flex items-start justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">Nueva Nota</h2>
+            <p class="text-xs text-gray-500 mt-1">Crea una nota para {{ fechaFormateadaParaCreacion }}</p>
+          </div>
+          <button @click="cerrarModal" class="text-gray-500 hover:text-gray-800 transition mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-6 space-y-5">
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Título</label>
+            <input v-model="formNota.titulo" type="text" placeholder="Título de la nota"
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black focus:border-black outline-none transition text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Contenido</label>
+            <textarea v-model="formNota.contenido" rows="4" placeholder="Escribe tu nota aquí..."
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black focus:border-black outline-none transition text-sm resize-none"></textarea>
+          </div>
+          <div class="pt-4 border-t border-gray-200 flex justify-end gap-4">
+            <button @click="cerrarModal" class="text-sm font-semibold text-gray-500 hover:text-gray-800 transition">Cancelar</button>
+            <button @click="guardarNota" class="px-6 py-2.5 text-sm font-bold text-white bg-black rounded-xl hover:bg-zinc-800 transition shadow-lg shadow-black/10">Guardar Nota</button>
           </div>
         </div>
       </div>
     </div>
   </div>
-
-  <div v-else-if="!cargando && vistaActual === 'semana'" class="flex-1 flex flex-col overflow-auto bg-white">
-    <div class="flex border-b border-gray-200 bg-white sticky top-0 z-10">
-      <div class="w-16 shrink-0 border-r border-gray-200"></div>
-      <div class="flex-1 grid grid-cols-7">
-        <div v-for="dia in semana" :key="dia.fecha" class="text-center py-3 border-r border-gray-200 last:border-0 flex flex-col items-center">
-          <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ dia.nombre }}</span>
-          <span class="text-xl mt-1" :class="dia.esHoy ? 'bg-black text-white w-8 h-8 flex items-center justify-center rounded-full' : 'text-gray-700 font-medium'">{{ dia.fecha }}</span>
-        </div>
-      </div>
-    </div>
-    <div class="flex flex-1 relative min-h-[800px]">
-      <div class="w-16 shrink-0 border-r border-gray-200 flex flex-col text-xs text-gray-400 font-medium bg-gray-50/30">
-        <div v-for="hora in horas" :key="hora" class="h-20 border-b border-gray-200 flex justify-center pt-2">{{ hora }}</div>
-      </div>
-      <div class="flex-1 grid grid-cols-7 relative">
-        <div v-for="d in 7" :key="d" class="border-r border-gray-200 relative">
-          <div v-for="hora in horas" :key="hora" class="h-20 border-b border-gray-100"></div>
-          <div v-for="evento in eventosSemanaColumna(d)" :key="evento.id"
-               class="absolute left-1 right-1 z-10 rounded p-2 text-xs shadow-sm"
-               :style="{ top: posYEvento(evento) + 'px', height: alturaEvento(evento) + 'px' }"
-               :class="claseColorEvento(evento.color_etiqueta)">
-            <p class="font-bold truncate">{{ evento.titulo }}</p>
-            <p class="opacity-75">{{ formatoHora(evento.fecha_inicio) }}</p>
-          </div>
-        </div>
-        <div v-if="lineaActual" class="absolute w-full border-t-2 border-green-500 z-20 flex items-center" :style="{ top: lineaActual + 'px' }">
-          <div class="w-2 h-2 rounded-full bg-green-500 -ml-1"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div v-else-if="!cargando && vistaActual === 'dia'" class="flex-1 flex flex-col overflow-auto bg-white">
-    <div class="flex border-b border-gray-200 bg-white sticky top-0 z-10">
-      <div class="w-16 shrink-0 border-r border-gray-200"></div>
-      <div class="flex-1 flex items-center px-6 py-3">
-        <span class="text-lg font-bold text-gray-800">{{ tituloDiaActual }}</span>
-      </div>
-    </div>
-    <div class="flex flex-1 relative min-h-[800px]">
-      <div class="w-16 shrink-0 border-r border-gray-200 flex flex-col text-xs text-gray-400 font-medium bg-gray-50/30">
-        <div v-for="hora in horas" :key="hora" class="h-20 border-b border-gray-200 flex justify-center pt-2">{{ hora }}</div>
-      </div>
-      <div class="flex-1 relative">
-        <div v-for="hora in horas" :key="hora" class="h-20 border-b border-gray-100"></div>
-        <div v-for="evento in eventosDelDiaView" :key="evento.id"
-             class="absolute left-1 right-1 z-10 rounded p-3 text-xs shadow-md"
-             :style="{ top: posYEvento(evento) + 'px', height: alturaEvento(evento) + 'px' }"
-             :class="claseColorEvento(evento.color_etiqueta)">
-          <p class="font-bold text-base mb-1">{{ evento.titulo }}</p>
-          <p class="opacity-75">{{ formatoHora(evento.fecha_inicio) }} - {{ formatoHora(evento.fecha_fin) }}</p>
-          <p v-if="evento.ubicacion" class="opacity-50 mt-1">{{ evento.ubicacion }}</p>
-        </div>
-        <div v-if="lineaActual" class="absolute w-full border-t-2 border-green-500 z-20 flex items-center" :style="{ top: lineaActual + 'px' }">
-          <div class="w-2 h-2 rounded-full bg-green-500 -ml-1"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div v-else-if="cargando" class="flex-1 flex items-center justify-center bg-gray-50">
-    <div class="flex flex-col items-center gap-3">
-      <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-      </svg>
-      <span class="text-sm text-gray-400">Cargando eventos...</span>
-    </div>
-  </div>
-
-  <button @click="abrirModal" class="fixed bottom-8 right-8 w-14 h-14 bg-black text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-transform">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-    </svg>
-  </button>
-
-  <ModalCrearEvento v-if="mostrarModal" @cerrar="mostrarModal = false" @guardar="guardarEvento" />
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import ModalCrearEvento from '@/components/eventos/ModalCrearEvento.vue'
-import { listarEventos, crearEvento } from '@/api/eventos.js'
+import AppFab from '@/components/ui/AppFab.vue'
+import { listarCalendario } from '@/api/calendario.js'
+import { crearEvento } from '@/api/eventos.js'
+import { crearTarea } from '@/api/tareas.js'
+import { crearNota } from '@/api/notas.js'
+
+const route = useRoute()
+const router = useRouter()
 
 const vistaActual = ref('mes')
-const mostrarModal = ref(false)
 const cargando = ref(true)
-const eventos = ref([])
 
 const ahora = dayjs()
 const anioActual = ref(ahora.year())
 const mesActual = ref(ahora.month())
 
-const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+const eventos = ref([])
+const tareas = ref([])
+const notas = ref([])
 
-const horas = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
+const diaSeleccionado = ref(null)
+const modalTipo = ref(null)
+
+const formTarea = ref({ titulo: '', prioridad: 'media' })
+const formNota = ref({ titulo: '', contenido: '' })
+
+const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
 const mesActualLabel = computed(() => {
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
   return `${meses[mesActual.value]} ${anioActual.value}`
 })
 
-const diaHoy = computed(() => ahora.date())
-const mesHoyLabel = computed(() => ahora.month())
-const anioHoy = computed(() => ahora.year())
-
 const totalDiasMes = computed(() => {
   return dayjs(new Date(anioActual.value, mesActual.value)).daysInMonth()
 })
 
-const semana = computed(() => {
-  const inicioSemana = ahora.startOf('week')
-  const dias = []
-  for (let i = 0; i < 7; i++) {
-    const dia = inicioSemana.add(i, 'day')
-    dias.push({
-      nombre: diasSemana[dia.day()],
-      fecha: dia.date(),
-      esHoy: dia.isSame(ahora, 'day')
-    })
+const esHoy = (diaNum) => {
+  return diaNum === ahora.date() && mesActual.value === ahora.month() && anioActual.value === ahora.year()
+}
+
+const fechaFormateadaParaCreacion = computed(() => {
+  if (diaSeleccionado.value !== null) {
+    return `${diaSeleccionado.value} de ${mesActualLabel.value}`
   }
-  return dias
+  return 'hoy'
 })
 
-const tituloDiaActual = computed(() => {
-  return `${diasSemana[ahora.day()]} ${ahora.date()} de ${mesActualLabel.value.split(' ')[0]}`
+const fechaParaCrear = computed(() => {
+  if (diaSeleccionado.value !== null) {
+    return dayjs(new Date(anioActual.value, mesActual.value, diaSeleccionado.value)).format('YYYY-MM-DD')
+  }
+  return ahora.format('YYYY-MM-DD')
 })
 
-const lineaActual = computed(() => {
-  const hora = ahora.hour()
-  const minuto = ahora.minute()
-  if (hora < 8 || hora >= 17) return null
-  const minutosDesdeInicio = (hora - 8) * 60 + minuto
-  return (minutosDesdeInicio / 60) * 80
+const eventosDelDia = (diaNum) => {
+  return eventos.value.filter((e) => {
+    const fecha = dayjs(e.fecha_inicio)
+    return fecha.date() === diaNum && fecha.month() === mesActual.value && fecha.year() === anioActual.value
+  })
+}
+
+const tareasDelDia = (diaNum) => {
+  return tareas.value.filter((t) => {
+    if (!t.fecha_limite) return false
+    const fecha = dayjs(t.fecha_limite)
+    return fecha.date() === diaNum && fecha.month() === mesActual.value && fecha.year() === anioActual.value
+  })
+}
+
+const notasDelDia = (diaNum) => {
+  return notas.value.filter((n) => {
+    const fecha = dayjs(n.fecha_creacion)
+    return fecha.date() === diaNum && fecha.month() === mesActual.value && fecha.year() === anioActual.value
+  })
+}
+
+const eventosDiaSeleccionado = computed(() => {
+  if (diaSeleccionado.value === null) return []
+  return eventosDelDia(diaSeleccionado.value)
 })
 
-const cargarEventos = async () => {
+const tareasDiaSeleccionado = computed(() => {
+  if (diaSeleccionado.value === null) return []
+  return tareasDelDia(diaSeleccionado.value)
+})
+
+const notasDiaSeleccionado = computed(() => {
+  if (diaSeleccionado.value === null) return []
+  return notasDelDia(diaSeleccionado.value)
+})
+
+const itemsDiaSeleccionado = computed(() => {
+  return [
+    ...eventosDiaSeleccionado.value,
+    ...tareasDiaSeleccionado.value,
+    ...notasDiaSeleccionado.value
+  ]
+})
+
+const formatoHora = (fecha) => {
+  if (!fecha) return ''
+  return dayjs(fecha).format('h:mm A')
+}
+
+const truncarTexto = (texto, max) => {
+  if (!texto) return ''
+  return texto.length > max ? texto.slice(0, max) + '...' : texto
+}
+
+const cargarDatos = async () => {
   cargando.value = true
   try {
-    const respuesta = await listarEventos()
-    eventos.value = respuesta.data.data || []
+    const primerDia = dayjs(new Date(anioActual.value, mesActual.value, 1)).format('YYYY-MM-DD')
+    const ultimoDia = dayjs(new Date(anioActual.value, mesActual.value, totalDiasMes.value)).format('YYYY-MM-DD')
+
+    const respuesta = await listarCalendario(primerDia, ultimoDia)
+    const data = respuesta.data.data || {}
+    eventos.value = data.eventos || []
+    tareas.value = data.tareas || []
+    notas.value = data.notas || []
   } catch (error) {
-    console.error('Error al cargar eventos:', error)
+    console.error('Error al cargar calendario:', error)
     eventos.value = []
+    tareas.value = []
+    notas.value = []
   } finally {
     cargando.value = false
   }
 }
 
 onMounted(() => {
-  cargarEventos()
+  leerFechaQuery()
+  cargarDatos()
 })
+
+watch([anioActual, mesActual], () => {
+  cargarDatos()
+})
+
+watch(() => route.query.fecha, (nuevaFecha) => {
+  if (nuevaFecha) {
+    leerFechaQuery()
+    cargarDatos()
+  }
+})
+
+function leerFechaQuery() {
+  const f = route.query.fecha
+  if (f) {
+    const fecha = dayjs(f)
+    if (fecha.isValid()) {
+      anioActual.value = fecha.year()
+      mesActual.value = fecha.month()
+      if (!route.query.crear) {
+        diaSeleccionado.value = fecha.date()
+      }
+    }
+  }
+  if (route.query.crear) {
+    abrirFormulario(route.query.crear)
+    if (f) {
+      const fecha = dayjs(f)
+      if (fecha.isValid()) {
+        anioActual.value = fecha.year()
+        mesActual.value = fecha.month()
+      }
+    }
+  }
+}
 
 const irAHoy = () => {
   anioActual.value = ahora.year()
   mesActual.value = ahora.month()
-  vistaActual.value = 'mes'
+  diaSeleccionado.value = null
+  router.push({ query: {} })
 }
 
 const cambiarMes = (delta) => {
@@ -226,73 +408,37 @@ const cambiarMes = (delta) => {
   }
 }
 
-const eventosDelDia = (diaNum) => {
-  return eventos.value.filter((e) => {
-    const fecha = dayjs(e.fecha_inicio)
-    return fecha.date() === diaNum && fecha.month() === mesActual.value && fecha.year() === anioActual.value
-  })
+const seleccionarDia = (diaNum) => {
+  diaSeleccionado.value = diaNum
+  const fecha = dayjs(new Date(anioActual.value, mesActual.value, diaNum)).format('YYYY-MM-DD')
+  router.push({ query: { fecha } })
 }
 
-const eventosDelDiaView = computed(() => {
-  return eventos.value.filter((e) => {
-    const fecha = dayjs(e.fecha_inicio)
-    return fecha.isSame(ahora, 'day')
-  })
-})
-
-const eventosSemanaColumna = (columna) => {
-  const diaSemana = semana.value[columna - 1]
-  if (!diaSemana) return []
-  return eventos.value.filter((e) => {
-    const fecha = dayjs(e.fecha_inicio)
-    return fecha.date() === diaSemana.fecha && fecha.month() === ahora.month()
-  })
+const cerrarDetalleDia = () => {
+  diaSeleccionado.value = null
+  router.push({ query: {} })
 }
 
-const formatoHora = (fecha) => {
-  if (!fecha) return ''
-  return dayjs(fecha).format('h:mm A')
+const abrirFormulario = (tipo) => {
+  modalTipo.value = tipo
+  mostrarMenuNuevo.value = false
+  formTarea.value = { titulo: '', prioridad: 'media' }
+  formNota.value = { titulo: '', contenido: '' }
 }
 
-const posYEvento = (evento) => {
-  if (!evento.fecha_inicio) return 0
-  const h = dayjs(evento.fecha_inicio).hour()
-  const m = dayjs(evento.fecha_inicio).minute()
-  return ((h - 8) * 60 + m) / 60 * 80 + 4
-}
-
-const alturaEvento = (evento) => {
-  if (!evento.fecha_inicio || !evento.fecha_fin) return 76
-  const inicio = dayjs(evento.fecha_inicio)
-  const fin = dayjs(evento.fecha_fin)
-  const diffMin = fin.diff(inicio, 'minute')
-  return Math.max(30, (diffMin / 60) * 80 - 4)
-}
-
-const claseColorEvento = (color) => {
-  const mapa = {
-    'teal': 'bg-teal-50 text-teal-700 border-l-2 border-teal-500',
-    'indigo': 'bg-indigo-50 text-indigo-700 border-l-2 border-indigo-500',
-    'red': 'bg-red-50 text-red-700 border-l-2 border-red-500',
-    'blue': 'bg-blue-50 text-blue-700 border-l-2 border-blue-500',
-    'green': 'bg-green-50 text-green-700 border-l-2 border-green-500',
-    'yellow': 'bg-yellow-50 text-yellow-700 border-l-2 border-yellow-500',
-    'purple': 'bg-purple-50 text-purple-700 border-l-2 border-purple-500',
-    'black': 'bg-slate-800 text-white border-l-2 border-slate-400',
-  }
-  return mapa[color] || 'bg-teal-50 text-teal-700 border-l-2 border-teal-500'
-}
-
-const abrirModal = () => {
-  mostrarModal.value = true
+const cerrarModal = () => {
+  modalTipo.value = null
+  const query = { ...route.query }
+  delete query.crear
+  router.replace({ query })
 }
 
 const guardarEvento = async (datos) => {
   try {
     const payload = {
       titulo: datos.titulo,
-      fecha_inicio: datos.fechaInicio,
-      fecha_fin: datos.fechaFin,
+      fecha_inicio: datos.fechaInicio || fechaParaCrear.value + 'T09:00:00',
+      fecha_fin: datos.fechaFin || fechaParaCrear.value + 'T10:00:00',
       ubicacion: datos.lugar || null,
       color_etiqueta: datos.categoria || null,
       categoria_id: datos.categoria_id || null
@@ -301,8 +447,52 @@ const guardarEvento = async (datos) => {
     if (respuesta.data.data) {
       eventos.value.push(respuesta.data.data)
     }
+    cerrarModal()
   } catch (error) {
     const mensaje = error.response?.data?.message || 'Error al crear el evento'
+    alert(mensaje)
+  }
+}
+
+const guardarTarea = async () => {
+  if (!formTarea.value.titulo) {
+    alert('El título es requerido')
+    return
+  }
+  try {
+    const payload = {
+      titulo: formTarea.value.titulo,
+      fecha_limite: fechaParaCrear.value,
+      prioridad: formTarea.value.prioridad
+    }
+    const respuesta = await crearTarea(payload)
+    if (respuesta.data.data) {
+      tareas.value.push(respuesta.data.data)
+    }
+    cerrarModal()
+  } catch (error) {
+    const mensaje = error.response?.data?.message || 'Error al crear la tarea'
+    alert(mensaje)
+  }
+}
+
+const guardarNota = async () => {
+  if (!formNota.value.titulo) {
+    alert('El título es requerido')
+    return
+  }
+  try {
+    const payload = {
+      titulo: formNota.value.titulo,
+      contenido: formNota.value.contenido || null
+    }
+    const respuesta = await crearNota(payload)
+    if (respuesta.data.data) {
+      notas.value.push(respuesta.data.data)
+    }
+    cerrarModal()
+  } catch (error) {
+    const mensaje = error.response?.data?.message || 'Error al crear la nota'
     alert(mensaje)
   }
 }

@@ -102,6 +102,10 @@
             </div>
           </div>
 
+          <div v-if="errorMsg" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+            {{ errorMsg }}
+          </div>
+
           <div v-if="pestanaActual === 'login'" class="text-left">
             <a href="#" class="text-xs font-semibold text-teal-600 hover:underline">
               Olvidaste tu contraseña?
@@ -112,8 +116,9 @@
             <button 
               v-if="pestanaActual === 'login'"
               type="submit" 
-              class="w-full bg-black hover:bg-zinc-800 text-white font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-widest shadow-lg active:scale-[0.99] transition-all">
-              Ingresar
+              :disabled="cargando"
+              class="w-full bg-black hover:bg-zinc-800 text-white font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-widest shadow-lg active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ cargando ? 'Conectando...' : 'Ingresar' }}
             </button>
 
             <button 
@@ -159,27 +164,38 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { devLogin } from '@/api/auth.js'
+import { useUsuarioStore } from '@/stores/usuarioStore'
 
 const router = useRouter()
+const store = useUsuarioStore()
 
 const pestanaActual = ref('login')
 const nombreCompleto = ref('')
 const correo = ref('')
 const contrasena = ref('')
 const mostrarContrasena = ref(false)
+const cargando = ref(false)
+const errorMsg = ref('')
 
-const manejarFormulario = () => {
+const manejarFormulario = async () => {
+  errorMsg.value = ''
+
   if (pestanaActual.value === 'login') {
-    if (correo.value === 'melany@ejemplo.com' && contrasena.value === 'melany') {
-      router.push('/calendario')
-    } else {
-      alert('Credenciales incorrectas')
+    cargando.value = true
+    try {
+      const respuesta = await devLogin()
+      if (respuesta.data.success) {
+        store.establecerUsuario(respuesta.data.data)
+        router.push('/calendario')
+      }
+    } catch (e) {
+      errorMsg.value = 'Error al conectar con el servidor'
+    } finally {
+      cargando.value = false
     }
   } else {
-    console.log('--- ENVIANDO NUEVO REGISTRO ---')
-    console.log('Nombre:', nombreCompleto.value)
-    console.log('Correo:', correo.value)
-    console.log('Contraseña:', contrasena.value)
+    alert('Modo registro: usa el login de desarrollo por ahora')
   }
 }
 

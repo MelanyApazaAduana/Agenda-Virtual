@@ -1,12 +1,6 @@
 <template>
-  <header class="h-20 bg-white flex items-center justify-between px-8 shrink-0 relative border-b border-gray-100">
-    <h1 class="font-bold text-lg tracking-wide text-gray-900">Dashboard <span class="text-gray-300 font-normal mx-1">/</span> Productivity</h1>
-    <div class="flex items-center gap-4">
-      <button class="text-gray-400 hover:text-gray-600 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
-      </button>
-      <div class="w-8 h-8 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-full cursor-pointer border-2 border-white shadow-sm"></div>
-    </div>
+  <header class="h-16 bg-white border-b border-gray-100 flex items-center px-8 shrink-0">
+    <h1 class="font-bold text-lg tracking-wide text-gray-900">Dashboard <span class="text-gray-300 font-normal mx-1">/</span> Productividad</h1>
   </header>
 
   <div class="flex-1 overflow-y-auto p-8 space-y-6">

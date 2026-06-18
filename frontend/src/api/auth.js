@@ -13,3 +13,6 @@ export const login = (correo, contrasena) =>
 
 export const registrar = (datos) =>
   api.post('/auth/registro', datos)
+
+export const devLogin = () =>
+  api.post('/auth/dev-login')

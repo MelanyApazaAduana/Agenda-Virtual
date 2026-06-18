@@ -103,14 +103,20 @@ class TareaModel {
             params.push(filtros.categoria_id);
         }
         
-        // Filtro por fecha límite (tareas pendientes antes de cierta fecha)
-        if (filtros.fecha_limite_hasta) {
+        // Filtro por rango de fecha límite
+        if (filtros.fecha_limite_desde && filtros.fecha_limite_hasta) {
+            sql += ` AND t.fecha_limite BETWEEN ? AND ?`;
+            params.push(filtros.fecha_limite_desde, filtros.fecha_limite_hasta);
+        } else if (filtros.fecha_limite_hasta) {
             sql += ` AND t.fecha_limite <= ?`;
             params.push(filtros.fecha_limite_hasta);
+        } else if (filtros.fecha_limite_desde) {
+            sql += ` AND t.fecha_limite >= ?`;
+            params.push(filtros.fecha_limite_desde);
         }
         
         // Ordenar por fecha límite (más cercanas primero)
-        sql += ` ORDER BY t.fecha_limite ASC NULLS LAST, t.creado_en DESC`;
+        sql += ` ORDER BY ISNULL(t.fecha_limite) ASC, t.fecha_limite ASC, t.creado_en DESC`;
         
         const [rows] = await promisePool.execute(sql, params);
         return rows;

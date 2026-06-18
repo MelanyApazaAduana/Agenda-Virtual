@@ -21,19 +21,19 @@ const PORT = process.env.PORT || 3000
 
 // Middlewares
 app.use(cors({
-    origin: 'http://localhost:5173', 
+    origin: 'http://localhost:5173',
     credentials: true
-}))           
-app.use(express.json());   
+}))
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 
 // Configuración de sesión
 app.use(session({
-    secret: process.env.SESSION_SECRET ,
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,  
+        secure: false,
         maxAge: 24 * 60 * 60 * 1000  // 24 horas
     }
 }))
@@ -55,8 +55,8 @@ app.use('/ingresos', ingresoRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'OK', 
+    res.json({
+        status: 'OK',
         message: 'Servidor funcionando',
         autenticado: req.isAuthenticated() || false
     })
@@ -68,7 +68,7 @@ cron.schedule('0 * * * *', async () => {
         const resultado = await EventoModel.actualizarEstadosAutomaticos(null);
         if (resultado.actualizados > 0) {
             console.log(`Estados actualizados: ${resultado.actualizados} eventos`);
-        }else {
+        } else {
             console.log(`No hay eventos para actualizar`);
         }
     } catch (error) {
