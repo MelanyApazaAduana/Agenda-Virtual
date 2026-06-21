@@ -1,4 +1,3 @@
-// backend/models/NotaModel.js
 import promisePool from '../config/database.js';
 
 class NotaModel {
@@ -64,7 +63,6 @@ class NotaModel {
         `;
         const params = [usuarioId];
 
-        // Filtro por estado
         if (filtros.estado) {
             const estadosValidos = ['borrador', 'guardado', 'archivado'];
             if (estadosValidos.includes(filtros.estado)) {
@@ -73,20 +71,17 @@ class NotaModel {
             }
         }
 
-        // Filtro por evento
         if (filtros.evento_id) {
             sql += ` AND n.evento_id = ?`;
             params.push(filtros.evento_id);
         }
 
-        // Filtro por búsqueda en título o contenido
         if (filtros.busqueda) {
             sql += ` AND (n.titulo LIKE ? OR n.contenido LIKE ?)`;
             const busqueda = `%${filtros.busqueda}%`;
             params.push(busqueda, busqueda);
         }
 
-        // Filtro por fecha de creación
         if (filtros.fecha_desde) {
             sql += ` AND DATE(n.fecha_creacion) >= ?`;
             params.push(filtros.fecha_desde);
@@ -96,7 +91,6 @@ class NotaModel {
             params.push(filtros.fecha_hasta);
         }
 
-        // Filtro por notas con audio
         if (filtros.tiene_audio !== undefined) {
             if (filtros.tiene_audio) {
                 sql += ` AND n.audio_url IS NOT NULL`;
@@ -106,13 +100,13 @@ class NotaModel {
         }
 
         // Filtro por notas con imagen
-        if (filtros.tiene_imagen !== undefined) {
-            if (filtros.tiene_imagen) {
-                sql += ` AND n.imagen_url IS NOT NULL`;
-            } else {
-                sql += ` AND n.imagen_url IS NULL`;
-            }
-        }
+        // if (filtros.tiene_imagen !== undefined) {
+        //     if (filtros.tiene_imagen) {
+        //         sql += ` AND n.imagen_url IS NOT NULL`;
+        //     } else {
+        //         sql += ` AND n.imagen_url IS NULL`;
+        //     }
+        // }
 
         // Ordenamiento
         const orden = filtros.orden || 'fecha_modificacion';
@@ -122,10 +116,10 @@ class NotaModel {
         sql += ` ORDER BY n.${ordenFinal} ${direccion === 'ASC' ? 'ASC' : 'DESC'}`;
 
         // Límite
-        if (filtros.limite) {
-            sql += ` LIMIT ?`;
-            params.push(parseInt(filtros.limite));
-        }
+        // if (filtros.limite) {
+        //     sql += ` LIMIT ?`;
+        //     params.push(parseInt(filtros.limite));
+        // }
 
         const [rows] = await promisePool.execute(sql, params);
         return rows;
@@ -145,35 +139,33 @@ class NotaModel {
         return rows[0] || null;
     }
 
-    // Actualizar una nota
     static async actualizar(id, usuarioId, datos) {
-        // Verificar que la nota existe y pertenece al usuario
+       
         const notaExistente = await this.obtenerPorId(id, usuarioId);
         if (!notaExistente) {
-            throw new Error('Nota no encontrada o no pertenece al usuario');
+            throw new Error('Nota no encontrada');
         }
 
         const { titulo, contenido, audio_url, imagen_url, estado, color_fondo, evento_id } = datos;
 
-        // Validar título si viene
+        
         if (titulo !== undefined && titulo.trim() === '') {
             throw new Error('El título no puede estar vacío');
         }
 
         // Validar evento si viene
-        if (evento_id !== undefined) {
-            if (evento_id) {
-                const [evento] = await promisePool.execute(
-                    'SELECT id FROM eventos WHERE id = ? AND usuario_id = ?',
-                    [evento_id, usuarioId]
-                );
-                if (evento.length === 0) {
-                    throw new Error('El evento especificado no existe o no pertenece al usuario');
-                }
-            }
-        }
+        // if (evento_id !== undefined) {
+        //     if (evento_id) {
+        //         const [evento] = await promisePool.execute(
+        //             'SELECT id FROM eventos WHERE id = ? AND usuario_id = ?',
+        //             [evento_id, usuarioId]
+        //         );
+        //         if (evento.length === 0) {
+        //             throw new Error('El evento especificado no existe o no pertenece al usuario');
+        //         }
+        //     }
+        // }
 
-        // Validar estado si viene
         if (estado) {
             const estadosValidos = ['borrador', 'guardado', 'archivado'];
             if (!estadosValidos.includes(estado)) {
@@ -182,11 +174,11 @@ class NotaModel {
         }
 
         // Validar color si viene
-        if (color_fondo) {
-            if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color_fondo)) {
-                throw new Error('El color debe ser un código hexadecimal válido (ej: #FFFFFF)');
-            }
-        }
+        // if (color_fondo) {
+        //     if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color_fondo)) {
+        //         throw new Error('El color debe ser un código hexadecimal válido (ej: #FFFFFF)');
+        //     }
+        // }
 
         const sql = `
             UPDATE notas 
@@ -217,29 +209,24 @@ class NotaModel {
             throw new Error('No se pudo actualizar la nota');
         }
 
-        // Retornar la nota actualizada
         return await this.obtenerPorId(id, usuarioId);
     }
 
-    // Autoguardar nota (siempre como borrador)
     static async autoguardar(usuarioId, datos) {
         const { titulo, contenido, audio_url, imagen_url, color_fondo, evento_id } = datos;
         
-        // Si no hay título, poner uno por defecto
         const tituloFinal = (titulo && titulo.trim() !== '') ? titulo.trim() : 'Nota sin título';
 
-        // Validar evento si viene
         if (evento_id) {
             const [evento] = await promisePool.execute(
                 'SELECT id FROM eventos WHERE id = ? AND usuario_id = ?',
                 [evento_id, usuarioId]
             );
             if (evento.length === 0) {
-                throw new Error('El evento especificado no existe o no pertenece al usuario');
+                throw new Error('El evento especificado no se encontro');
             }
         }
 
-        // Validar color si viene
         if (color_fondo && !/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color_fondo)) {
             throw new Error('El color debe ser un código hexadecimal válido (ej: #FFFFFF)');
         }
@@ -261,20 +248,17 @@ class NotaModel {
         return await this.obtenerPorId(result.insertId, usuarioId);
     }
 
-    // Actualizar autoguardado (mantiene estado borrador)
     static async actualizarAutoguardado(id, usuarioId, datos) {
-        // Verificar que la nota existe y pertenece al usuario
+        
         const notaExistente = await this.obtenerPorId(id, usuarioId);
         if (!notaExistente) {
-            throw new Error('Nota no encontrada o no pertenece al usuario');
+            throw new Error('Nota no encontrada');
         }
 
         const { titulo, contenido, audio_url, imagen_url, color_fondo, evento_id } = datos;
 
-        // Si no hay título, poner uno por defecto
         const tituloFinal = (titulo && titulo.trim() !== '') ? titulo.trim() : 'Nota sin título';
 
-        // Validar evento si viene
         if (evento_id !== undefined) {
             if (evento_id) {
                 const [evento] = await promisePool.execute(
@@ -282,19 +266,17 @@ class NotaModel {
                     [evento_id, usuarioId]
                 );
                 if (evento.length === 0) {
-                    throw new Error('El evento especificado no existe o no pertenece al usuario');
+                    throw new Error('El evento especificado no se encontro');
                 }
             }
         }
 
-        // Validar color si viene
         if (color_fondo) {
             if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color_fondo)) {
                 throw new Error('El color debe ser un código hexadecimal válido (ej: #FFFFFF)');
             }
         }
 
-        // Mantener estado 'borrador' siempre en autoguardado
         const sql = `
             UPDATE notas 
             SET titulo = ?,
@@ -326,9 +308,7 @@ class NotaModel {
         return await this.obtenerPorId(id, usuarioId);
     }
 
-    // Guardar nota definitivamente (cambiar a estado guardado)
     static async guardarNota(id, usuarioId, datos) {
-        // Verificar que la nota existe y pertenece al usuario
         const notaExistente = await this.obtenerPorId(id, usuarioId);
         if (!notaExistente) {
             throw new Error('Nota no encontrada o no pertenece al usuario');
@@ -336,12 +316,10 @@ class NotaModel {
 
         const { titulo, contenido, audio_url, imagen_url, color_fondo, evento_id } = datos;
 
-        // Validar título si viene
-        if (titulo !== undefined && titulo.trim() === '') {
-            throw new Error('El título no puede estar vacío');
-        }
+        // if (titulo !== undefined && titulo.trim() === '') {
+        //     throw new Error('El título no puede estar vacío');
+        // }
 
-        // Validar evento si viene
         if (evento_id !== undefined) {
             if (evento_id) {
                 const [evento] = await promisePool.execute(
@@ -349,7 +327,7 @@ class NotaModel {
                     [evento_id, usuarioId]
                 );
                 if (evento.length === 0) {
-                    throw new Error('El evento especificado no existe o no pertenece al usuario');
+                    throw new Error('El evento especificado no se encontro');
                 }
             }
         }
@@ -361,7 +339,6 @@ class NotaModel {
             }
         }
 
-        // Cambiar estado a 'guardado'
         const sql = `
             UPDATE notas 
             SET titulo = COALESCE(?, titulo),
@@ -393,12 +370,11 @@ class NotaModel {
         return await this.obtenerPorId(id, usuarioId);
     }
 
-    // Cambiar estado de una nota
     static async cambiarEstado(id, usuarioId, estado) {
-        const estadosValidos = ['borrador', 'guardado', 'archivado'];
-        if (!estadosValidos.includes(estado)) {
-            throw new Error('Estado no válido. Debe ser: borrador, guardado o archivado');
-        }
+        //const estadosValidos = ['guardado', 'archivado'];
+        // if (!estadosValidos.includes(estado)) {
+        //     throw new Error('Estado no válido. Debe ser: borrador, guardado o archivado');
+        // }
 
         const sql = `
             UPDATE notas 
@@ -414,34 +390,28 @@ class NotaModel {
         return await this.obtenerPorId(id, usuarioId);
     }
 
-    // Archivar una nota (cambiar a estado archivado)
     static async archivar(id, usuarioId) {
         return await this.cambiarEstado(id, usuarioId, 'archivado');
     }
 
-    // Restaurar nota archivada (cambiar a estado guardado)
     static async restaurar(id, usuarioId) {
         return await this.cambiarEstado(id, usuarioId, 'guardado');
     }
 
-    // Eliminar una nota
     static async eliminar(id, usuarioId) {
         const sql = 'DELETE FROM notas WHERE id = ? AND usuario_id = ?';
         const [result] = await promisePool.execute(sql, [id, usuarioId]);
         return result.affectedRows > 0;
     }
 
-    // Obtener notas archivadas
     static async listarArchivadas(usuarioId) {
         return await this.listarPorUsuario(usuarioId, { estado: 'archivado' });
     }
 
-    // Obtener notas por evento
     static async listarPorEvento(usuarioId, eventoId) {
         return await this.listarPorUsuario(usuarioId, { evento_id: eventoId });
     }
 
-    // Buscar notas por texto
     static async buscar(usuarioId, texto) {
         if (!texto || texto.trim() === '') {
             return [];
@@ -449,7 +419,6 @@ class NotaModel {
         return await this.listarPorUsuario(usuarioId, { busqueda: texto.trim() });
     }
 
-    // Obtener notas recientes
     static async obtenerRecientes(usuarioId, limite = 10) {
         return await this.listarPorUsuario(usuarioId, {
             limite: limite,

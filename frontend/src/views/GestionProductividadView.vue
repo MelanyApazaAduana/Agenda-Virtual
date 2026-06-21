@@ -12,12 +12,12 @@
           <div class="w-3 h-3 bg-teal-500 rounded-full relative z-10"></div>
         </div>
         <div>
-          <h3 class="text-white font-bold text-lg">Live Flow</h3>
-          <p class="text-gray-400 text-sm">You are currently in your most productive window (10am-2pm).</p>
+          <h3 class="text-white font-bold text-lg">Flujo Activo</h3>
+          <p class="text-gray-400 text-sm">Actualmente estás en tu ventana más productiva (10am-2pm).</p>
         </div>
       </div>
       <button class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-bold transition backdrop-blur-sm">
-        Start Deep Work
+        Iniciar Trabajo Profundo
       </button>
     </div>
 
@@ -25,10 +25,10 @@
       
       <div class="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
         <div class="flex items-center justify-between mb-6">
-          <h3 class="font-bold text-gray-900">Peak Productivity Hours</h3>
+          <h3 class="font-bold text-gray-900">Horas Pico de Productividad</h3>
           <select class="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-600 rounded-lg px-3 py-1.5 outline-none">
-            <option>This Week</option>
-            <option>Last Week</option>
+            <option>Esta Semana</option>
+            <option>Semana Pasada</option>
           </select>
         </div>
         
@@ -36,32 +36,32 @@
           <div class="flex-1 bg-gray-100 rounded-t-sm h-[30%] hover:bg-teal-100 transition relative group"></div>
           <div class="flex-1 bg-gray-100 rounded-t-sm h-[45%] hover:bg-teal-100 transition relative group"></div>
           <div class="flex-1 bg-teal-500 rounded-t-sm h-[90%] shadow-md relative group">
-            <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">Deep Work</div>
+            <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">Trabajo Profundo</div>
           </div>
           <div class="flex-1 bg-gray-100 rounded-t-sm h-[60%] hover:bg-teal-100 transition relative group"></div>
           <div class="flex-1 bg-gray-100 rounded-t-sm h-[40%] hover:bg-teal-100 transition relative group"></div>
           <div class="flex-1 bg-gray-100 rounded-t-sm h-[20%] hover:bg-teal-100 transition relative group"></div>
         </div>
         <div class="flex justify-between text-xs text-gray-400 font-bold uppercase tracking-widest border-t border-gray-100 pt-3">
-          <span>Mon</span><span>Tue</span><span class="text-teal-600">Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          <span>Lun</span><span>Mar</span><span class="text-teal-600">Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
         </div>
         
         <div class="mt-4 p-3 bg-teal-50 rounded-lg border border-teal-100">
           <p class="text-sm text-teal-800 font-medium">
-            💡 Your productivity peaked during <strong>Deep Work sessions</strong> on Wednesday.
+            💡 Tu productividad alcanzó su punto máximo durante las sesiones de <strong>Trabajo Profundo</strong> el miércoles.
           </p>
         </div>
       </div>
 
       <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col">
-        <h3 class="font-bold text-gray-900 mb-6">Milestone Progress</h3>
+        <h3 class="font-bold text-gray-900 mb-6">Progreso de Hitos</h3>
         
         <div class="space-y-6 flex-1">
           <div>
             <div class="flex justify-between items-end mb-2">
               <div>
-                <p class="text-sm font-bold text-gray-900">Project Orion Launch</p>
-                <p class="text-xs text-gray-500">82% Completed</p>
+                <p class="text-sm font-bold text-gray-900">Lanzamiento Proyecto Orión</p>
+                <p class="text-xs text-gray-500">82% Completado</p>
               </div>
               <span class="text-teal-600 font-bold text-sm">82%</span>
             </div>
@@ -73,8 +73,8 @@
           <div>
             <div class="flex justify-between items-end mb-2">
               <div>
-                <p class="text-sm font-bold text-gray-900">Infrastructure Migration</p>
-                <p class="text-xs text-gray-500">45% Completed</p>
+                <p class="text-sm font-bold text-gray-900">Migración de Infraestructura</p>
+                <p class="text-xs text-gray-500">45% Completado</p>
               </div>
               <span class="text-orange-500 font-bold text-sm">45%</span>
             </div>
@@ -86,15 +86,15 @@
       </div>
 
       <div class="lg:col-span-3 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <h3 class="font-bold text-gray-900 mb-1">Team Efficiency</h3>
-        <p class="text-xs text-gray-500 mb-6">Top contributors this cycle based on completed tasks and focused hours.</p>
+        <h3 class="font-bold text-gray-900 mb-1">Eficiencia del Equipo</h3>
+        <p class="text-xs text-gray-500 mb-6">Principales contribuyentes de este ciclo basado en tareas completadas y horas de enfoque.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="flex items-center gap-4 p-4 border border-gray-100 rounded-xl hover:border-teal-200 hover:shadow-md transition bg-gray-50/50 hover:bg-white cursor-pointer">
             <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">SC</div>
             <div>
               <h4 class="font-bold text-gray-900 text-sm">Sarah Chen</h4>
-              <p class="text-xs text-gray-500">24 Tasks • 18h Focus</p>
+              <p class="text-xs text-gray-500">24 Tareas • 18h Enfoque</p>
             </div>
           </div>
 
@@ -103,7 +103,7 @@
             <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-lg">MT</div>
             <div>
               <h4 class="font-bold text-gray-900 text-sm">Marcus Thorne</h4>
-              <p class="text-xs text-gray-500">31 Tasks • 22h Focus</p>
+              <p class="text-xs text-gray-500">31 Tareas • 22h Enfoque</p>
             </div>
           </div>
 
@@ -111,7 +111,7 @@
             <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-lg">AM</div>
             <div>
               <h4 class="font-bold text-gray-900 text-sm">Alex Morgan</h4>
-              <p class="text-xs text-gray-500">18 Tasks • 15h Focus</p>
+              <p class="text-xs text-gray-500">18 Tareas • 15h Enfoque</p>
             </div>
           </div>
         </div>

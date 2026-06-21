@@ -9,6 +9,9 @@ const GestionProductividadView = () => import('@/views/GestionProductividadView.
 const GestionUsuariosView = () => import('@/views/GestionUsuariosView.vue')
 const RegistrarIngresoView = () => import('@/views/RegistrarIngresoView.vue')
 const ReportesFinancierosView = () => import('@/views/ReportesFinancierosView.vue')
+const RegistrarGastoView = () => import('@/views/RegistrarGastoView.vue')
+const CalendarioSemView = () => import('@/views/CalendarioSemanal.vue')
+const CalendarioDiaView = () => import('@/views/CalendarioDiario.vue')
 
 const routes = [
   {
@@ -25,6 +28,18 @@ const routes = [
     path: '/calendario',
     name: 'calendario',
     component: CalendarioView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/semanal',
+    name: 'semanal',
+    component: CalendarioSemView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+    {
+    path: '/diario',
+    name: 'diario',
+    component: CalendarioDiaView,
     meta: { layout: 'DashboardLayout', requiereAuth: true }
   },
   {
@@ -61,6 +76,12 @@ const routes = [
     path: '/ingresos/reportes',
     name: 'reportes-financieros',
     component: ReportesFinancierosView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/gastos/registrar',
+    name: 'registrar-gasto',
+    component: RegistrarGastoView,
     meta: { layout: 'DashboardLayout', requiereAuth: true }
   }
 ]

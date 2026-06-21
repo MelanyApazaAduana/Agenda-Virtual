@@ -12,6 +12,13 @@ import eventoRoutes from './routes/eventoRoutes.js'
 import ingresoRoutes from './routes/ingresoRoutes.js'
 import EventoModel from './models/EventoModel.js'
 
+import notaRoutes from './routes/notaRoutes.js'
+import recordatorioRoutes from './routes/recordatorioRoutes.js';
+import gastoRoutes from './routes/gastoRoutes.js';
+
+import calendarioRoutes from './routes/calendarioRoutes.js';
+
+
 import { testConnection } from './config/database.js'
 
 dotenv.config()
@@ -52,6 +59,14 @@ app.use('/eventos', eventoRoutes);
 app.use('/tareas', tareaRoutes);
 
 app.use('/ingresos', ingresoRoutes);
+
+app.use('/notas',notaRoutes);
+
+app.use('/recordatorios',recordatorioRoutes);
+
+app.use('/gastos',gastoRoutes);
+
+app.use('/calendario',calendarioRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {

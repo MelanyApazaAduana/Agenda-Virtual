@@ -1,86 +1,7 @@
 <template>
   <div class="min-h-screen bg-white flex font-sans text-gray-800">
     
-    <aside class="w-64 border-r border-gray-200 flex flex-col bg-gray-50/50 hidden lg:flex shrink-0">
-      <div class="h-16 flex items-center px-6 border-b border-gray-200">
-        <div class="bg-black text-white p-1.5 rounded-lg mr-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-          </svg>
-        </div>
-        <span class="font-bold text-lg tracking-wide">ChronosAI</span>
-      </div>
-
-      <div class="p-4 flex-1 overflow-y-auto">
-        <button class="w-full bg-black text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 mb-6 hover:bg-zinc-800 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Nuevo
-        </button>
-
-        <div class="mb-8">
-          <div class="flex justify-between items-center mb-4 px-1">
-            <span class="text-sm font-bold">Octubre 2024</span>
-            <div class="flex gap-2 text-gray-400">
-              <button>&lt;</button><button>&gt;</button>
-            </div>
-          </div>
-          <div class="grid grid-cols-7 text-center text-xs text-gray-400 font-medium mb-2">
-            <span>D</span><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span>
-          </div>
-          <div class="grid grid-cols-7 text-center text-xs gap-y-2 text-gray-600">
-            <span class="text-gray-300">29</span><span class="text-gray-300">30</span>
-            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
-            <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
-            <span>13</span><span>14</span><span>15</span><span class="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center mx-auto">16</span><span>17</span><span>18</span><span>19</span>
-            <span>20</span><span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><span>26</span>
-            <span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="text-gray-300">1</span><span class="text-gray-300">2</span>
-          </div>
-        </div>
-
-        <nav class="space-y-1 mb-8">
-          <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium bg-gray-100 rounded-lg text-gray-900">Eventos</a>
-          <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">Tareas</a>
-          <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">Notas</a>
-          <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">Productividad</a>
-        </nav>
-
-        <div>
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-3">Mis Calendarios</h3>
-          <div class="space-y-2 px-3">
-            <label class="flex items-center gap-3 text-sm text-gray-600 cursor-pointer">
-              <input type="checkbox" checked class="rounded text-teal-500 focus:ring-teal-500 accent-teal-500 w-4 h-4" /> Personal
-            </label>
-            <label class="flex items-center gap-3 text-sm text-gray-600 cursor-pointer">
-              <input type="checkbox" checked class="rounded text-black focus:ring-black accent-black w-4 h-4" /> Work (Chronos)
-            </label>
-            <label class="flex items-center gap-3 text-sm text-gray-600 cursor-pointer">
-              <input type="checkbox" class="rounded text-gray-300 focus:ring-gray-300 accent-gray-300 w-4 h-4" /> Deadlines
-            </label>
-          </div>
-        </div>
-      </div>
-    </aside>
-
     <main class="flex-1 flex flex-col h-screen overflow-hidden border-r border-gray-200">
-      
-      <header class="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0">
-        <div class="flex items-center gap-4">
-          <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">Hoy</button>
-          <div class="flex items-center gap-3 text-lg font-bold text-gray-800">
-            <button class="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">&lt;</button>
-            16 Octubre 2024
-            <button class="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">&gt;</button>
-          </div>
-        </div>
-
-        <div class="flex bg-gray-100 p-1 rounded-lg">
-          <button class="px-4 py-1.5 text-sm font-medium bg-white text-gray-900 rounded-md shadow-sm">Día</button>
-          <button class="px-4 py-1.5 text-sm font-medium text-gray-500 rounded-md hover:text-gray-900">Semana</button>
-          <button class="px-4 py-1.5 text-sm font-medium text-gray-500 rounded-md hover:text-gray-900">Mes</button>
-        </div>
-      </header>
 
       <div class="flex-1 overflow-y-auto relative bg-white pb-10">
         
@@ -136,14 +57,6 @@
 
     <aside class="w-80 bg-gray-50/30 flex flex-col h-screen overflow-y-auto hidden xl:flex shrink-0">
       
-      <div class="h-16 flex items-center justify-end px-6">
-        <div class="flex items-center gap-4">
-          <button class="text-gray-400 hover:text-gray-600">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
-          </button>
-          <div class="w-8 h-8 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-full cursor-pointer border-2 border-white shadow-sm"></div>
-        </div>
-      </div>
 
       <div class="p-6 space-y-8">
         

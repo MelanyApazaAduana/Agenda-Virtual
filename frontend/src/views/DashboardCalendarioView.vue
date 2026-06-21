@@ -1,61 +1,44 @@
 <template>
   <div class="h-full flex flex-col">
-    <header class="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0">
-      <div class="flex items-center gap-4">
-        <button @click="irAHoy" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">Hoy</button>
-        <div class="flex items-center gap-3 text-lg font-bold text-gray-800">
-          <button @click="cambiarMes(-1)" class="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">&lt;</button>
-          {{ mesActualLabel }}
-          <button @click="cambiarMes(1)" class="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">&gt;</button>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-6">
-        <div v-if="cargando" class="text-xs text-gray-400 font-medium">Cargando...</div>
-        <div class="flex bg-gray-100 p-1 rounded-lg">
-          <button @click="vistaActual = 'mes'" class="px-4 py-1.5 text-sm font-medium rounded-md transition"
-            :class="vistaActual === 'mes' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'">Mes</button>
-        </div>
-      </div>
-    </header>
-
     <div v-if="!cargando" class="flex-1 flex flex-col overflow-hidden">
       <div class="grid grid-cols-7 border-b border-gray-200 bg-white">
         <div v-for="dia in diasSemana" :key="dia" class="py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-widest border-r border-gray-200 last:border-0">
           {{ dia }}
         </div>
       </div>
-      <div :class="diaSeleccionado !== null ? 'grid grid-cols-7 grid-rows-5 bg-gray-200 gap-px overflow-y-auto' : 'flex-1 grid grid-cols-7 grid-rows-5 bg-gray-200 gap-px'">
+      <div :class="diaSeleccionado !== null ? 'grid grid-cols-7 grid-rows-6 bg-gray-200 gap-px overflow-y-auto' : 'flex-1 grid grid-cols-7 grid-rows-6 bg-gray-200 gap-px'">
         <div
-          v-for="diaNum in totalDiasMes" :key="diaNum"
-          @click="seleccionarDia(diaNum)"
+          v-for="(item, idx) in diasCalendario" :key="idx"
+          @click="seleccionarDia(item)"
           class="bg-white p-2 flex flex-col hover:bg-gray-50 transition min-h-[90px] cursor-pointer relative"
-          :class="{ 'ring-2 ring-black ring-inset': diaSeleccionado === diaNum }"
+          :class="{ 'ring-2 ring-black ring-inset': item.esSeleccionado && !item.fueraMes }"
         >
           <span
             class="text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full mb-1"
-            :class="esHoy(diaNum) ? 'bg-black text-white' : diaSeleccionado === diaNum && !esHoy(diaNum) ? 'bg-gray-200 text-gray-900' : 'text-gray-700'"
-          >{{ diaNum }}</span>
+            :class="item.esHoy ? 'bg-black text-white' : item.esSeleccionado && !item.esHoy ? 'bg-gray-200 text-gray-900' : item.fueraMes ? 'text-gray-300' : 'text-gray-700'"
+          >{{ item.dia }}</span>
 
-          <div class="flex-1 space-y-1 overflow-y-auto no-scrollbar">
-            <div v-for="evento in eventosDelDia(diaNum)" :key="'e-' + evento.id"
-                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate bg-blue-50 text-blue-700 border-l-2 border-blue-500">
-              {{ truncarTexto(evento.titulo, 15) }}
+          <div v-if="!item.fueraMes" class="flex-1 space-y-1 overflow-y-auto no-scrollbar">
+            <div v-for="evento in eventosDelDia(item.dia)" :key="'e-' + evento.id"
+                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate flex items-center gap-1"
+                 :class="estadoClaseEvento(estadoColor(evento.estado)).cell">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="estadoClaseEvento(estadoColor(evento.estado)).dot"></span>
+              {{ truncarTexto(evento.titulo, 12) }}
             </div>
-            <div v-for="tarea in tareasDelDia(diaNum)" :key="'t-' + tarea.id"
+            <div v-for="tarea in tareasDelDia(item.dia)" :key="'t-' + tarea.id"
                  class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate bg-green-50 text-green-700 border-l-2 border-green-500">
               {{ truncarTexto(tarea.titulo, 15) }}
             </div>
-            <div v-for="nota in notasDelDia(diaNum)" :key="'n-' + nota.id"
+            <div v-for="nota in notasDelDia(item.dia)" :key="'n-' + nota.id"
                  class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate bg-yellow-50 text-yellow-700 border-l-2 border-yellow-500">
               {{ truncarTexto(nota.titulo, 15) }}
             </div>
           </div>
 
-          <div class="flex gap-1 mt-auto pt-1">
-            <span v-if="eventosDelDia(diaNum).length" class="w-1.5 h-1.5 rounded-full bg-blue-500" title="Eventos"></span>
-            <span v-if="tareasDelDia(diaNum).length" class="w-1.5 h-1.5 rounded-full bg-green-500" title="Tareas"></span>
-            <span v-if="notasDelDia(diaNum).length" class="w-1.5 h-1.5 rounded-full bg-yellow-500" title="Notas"></span>
+          <div v-if="!item.fueraMes" class="flex gap-1 mt-auto pt-1">
+            <span v-if="eventosDelDia(item.dia).length" class="w-1.5 h-1.5 rounded-full bg-blue-500" title="Eventos"></span>
+            <span v-if="tareasDelDia(item.dia).length" class="w-1.5 h-1.5 rounded-full bg-green-500" title="Tareas"></span>
+            <span v-if="notasDelDia(item.dia).length" class="w-1.5 h-1.5 rounded-full bg-yellow-500" title="Notas"></span>
           </div>
         </div>
       </div>
@@ -89,9 +72,16 @@
             </h4>
             <div class="space-y-1.5">
               <div v-for="item in eventosDiaSeleccionado" :key="item.id"
-                   class="bg-blue-50 rounded-lg px-4 py-2.5 border-l-4 border-blue-500">
-                <p class="text-sm font-semibold text-gray-900">{{ item.titulo }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">{{ formatoHora(item.fecha_inicio) }} - {{ formatoHora(item.fecha_fin) }}</p>
+                   class="rounded-lg px-4 py-2.5 border-l-4 flex items-start justify-between gap-2"
+                   :class="item.estado === 'cancelado' ? 'bg-gray-50 border-l-gray-400 opacity-60' : item.estado === 'completado' ? 'bg-green-50 border-l-green-500' : 'bg-blue-50 border-l-blue-500'">
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-gray-900 truncate">{{ item.titulo }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ formatoHora(item.fecha_inicio) }} - {{ formatoHora(item.fecha_fin) }}</p>
+                </div>
+                <span class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                      :class="estadoClaseEvento(estadoColor(item.estado)).badge">
+                  {{ estadoEtiqueta(item.estado) }}
+                </span>
               </div>
             </div>
           </div>
@@ -256,9 +246,48 @@ const totalDiasMes = computed(() => {
   return dayjs(new Date(anioActual.value, mesActual.value)).daysInMonth()
 })
 
-const esHoy = (diaNum) => {
-  return diaNum === ahora.date() && mesActual.value === ahora.month() && anioActual.value === ahora.year()
-}
+const diasCalendario = computed(() => {
+  const primerDia = dayjs(new Date(anioActual.value, mesActual.value, 1))
+  const diasEnMes = primerDia.daysInMonth()
+  const diaSemanaInicio = primerDia.day()
+  const dias = []
+
+  for (let i = 0; i < diaSemanaInicio; i++) {
+    const fecha = primerDia.subtract(diaSemanaInicio - i, 'day')
+    dias.push({
+      dia: fecha.date(),
+      fueraMes: true,
+      esHoy: false,
+      esSeleccionado: false,
+      fecha
+    })
+  }
+
+  for (let i = 1; i <= diasEnMes; i++) {
+    const fecha = dayjs(new Date(anioActual.value, mesActual.value, i))
+    dias.push({
+      dia: i,
+      fueraMes: false,
+      esHoy: fecha.isSame(ahora, 'day'),
+      esSeleccionado: diaSeleccionado.value === i,
+      fecha
+    })
+  }
+
+  const resto = 42 - dias.length
+  for (let i = 1; i <= resto; i++) {
+    const fecha = dayjs(new Date(anioActual.value, mesActual.value + 1, i))
+    dias.push({
+      dia: i,
+      fueraMes: true,
+      esHoy: false,
+      esSeleccionado: false,
+      fecha
+    })
+  }
+
+  return dias
+})
 
 const fechaFormateadaParaCreacion = computed(() => {
   if (diaSeleccionado.value !== null) {
@@ -327,6 +356,31 @@ const formatoHora = (fecha) => {
 const truncarTexto = (texto, max) => {
   if (!texto) return ''
   return texto.length > max ? texto.slice(0, max) + '...' : texto
+}
+
+const mapEstado = {
+  pendiente:   { cell: 'bg-blue-50 text-blue-700',   dot: 'bg-blue-500',      badge: 'bg-blue-100 text-blue-700' },
+  en_curso:    { cell: 'bg-indigo-50 text-indigo-700', dot: 'bg-indigo-500',   badge: 'bg-indigo-100 text-indigo-700' },
+  completado:  { cell: 'bg-green-50 text-green-700',  dot: 'bg-green-500',    badge: 'bg-green-100 text-green-700' },
+  vencido:     { cell: 'bg-red-50 text-red-700',      dot: 'bg-red-500',      badge: 'bg-red-100 text-red-700' },
+  cancelado:   { cell: 'bg-gray-100 text-gray-500',   dot: 'bg-gray-400',     badge: 'bg-gray-100 text-gray-500' },
+  pospuesto:   { cell: 'bg-amber-50 text-amber-700',  dot: 'bg-amber-500',    badge: 'bg-amber-100 text-amber-700' }
+}
+
+const estadoColor = (estado) => mapEstado[estado] || mapEstado.pendiente
+
+const estadoClaseEvento = (colores) => colores
+
+const estadoEtiqueta = (estado) => {
+  const etiquetas = {
+    pendiente: 'Pendiente',
+    en_curso: 'En curso',
+    completado: 'Completado',
+    vencido: 'Vencido',
+    cancelado: 'Cancelado',
+    pospuesto: 'Pospuesto'
+  }
+  return etiquetas[estado] || estado
 }
 
 const cargarDatos = async () => {
@@ -408,9 +462,10 @@ const cambiarMes = (delta) => {
   }
 }
 
-const seleccionarDia = (diaNum) => {
-  diaSeleccionado.value = diaNum
-  const fecha = dayjs(new Date(anioActual.value, mesActual.value, diaNum)).format('YYYY-MM-DD')
+const seleccionarDia = (item) => {
+  if (item.fueraMes) return
+  diaSeleccionado.value = item.dia
+  const fecha = item.fecha.format('YYYY-MM-DD')
   router.push({ query: { fecha } })
 }
 
@@ -421,7 +476,6 @@ const cerrarDetalleDia = () => {
 
 const abrirFormulario = (tipo) => {
   modalTipo.value = tipo
-  mostrarMenuNuevo.value = false
   formTarea.value = { titulo: '', prioridad: 'media' }
   formNota.value = { titulo: '', contenido: '' }
 }
@@ -433,6 +487,9 @@ const cerrarModal = () => {
   router.replace({ query })
 }
 
+const mapaCategoria = { work: 1, personal: 2, design: 3 }
+const mapaColorEtiqueta = { work: '#1D4ED8', personal: '#059669', design: '#7C3AED' }
+
 const guardarEvento = async (datos) => {
   try {
     const payload = {
@@ -440,8 +497,8 @@ const guardarEvento = async (datos) => {
       fecha_inicio: datos.fechaInicio || fechaParaCrear.value + 'T09:00:00',
       fecha_fin: datos.fechaFin || fechaParaCrear.value + 'T10:00:00',
       ubicacion: datos.lugar || null,
-      color_etiqueta: datos.categoria || null,
-      categoria_id: datos.categoria_id || null
+      color_etiqueta: mapaColorEtiqueta[datos.categoria] || null,
+      categoria_id: mapaCategoria[datos.categoria] || null
     }
     const respuesta = await crearEvento(payload)
     if (respuesta.data.data) {

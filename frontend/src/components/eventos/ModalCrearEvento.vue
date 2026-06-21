@@ -38,9 +38,8 @@
               </div>
               <input 
                 v-model="formulario.fechaInicio" 
-                type="text" 
-                placeholder="dd /mm/aaaa, --:-- --"
-                class="w-full pl-9 pr-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-800 placeholder-gray-500"
+                type="datetime-local" 
+                class="w-full pl-9 pr-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-800"
               />
             </div>
           </div>
@@ -55,9 +54,8 @@
               </div>
               <input 
                 v-model="formulario.fechaFin" 
-                type="text" 
-                placeholder="dd /mm/aaaa, --:-- --"
-                class="w-full pl-9 pr-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-800 placeholder-gray-500"
+                type="datetime-local" 
+                class="w-full pl-9 pr-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-800"
               />
             </div>
           </div>

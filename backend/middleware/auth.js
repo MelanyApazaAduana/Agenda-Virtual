@@ -4,6 +4,6 @@ export const verificarAutenticacion = (req, res, next) => {
     }
     res.status(401).json({
         success: false,
-        mensaje: 'No autorizado. Debes iniciar sesión.'
+        message: 'No autorizado. Debes iniciar sesión.'
     });
 };
