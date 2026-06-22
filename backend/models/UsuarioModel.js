@@ -1,4 +1,5 @@
 import promisePool from '../config/database.js'
+import bcrypt from 'bcryptjs'
 
 class UsuarioModel {
     // Buscar o crear usuario por Google
@@ -75,6 +76,39 @@ class UsuarioModel {
             console.error('Error en buscarPorId:', error)
             throw error
         }
+    }
+
+    // Buscar usuario por correo (incluye la contraseña, para validar el login)
+    static async buscarPorCorreo(correo) {
+        const [rows] = await promisePool.query(
+            'SELECT * FROM usuarios WHERE correo = ?',
+            [correo]
+        )
+        return rows[0] || null
+    }
+
+    // Registrar un usuario nuevo con correo y contraseña
+    static async crearLocal({ nombre, correo, contrasena, rol = 'usuario' }) {
+        const contrasenaHash = await bcrypt.hash(contrasena, 10)
+
+        const [resultado] = await promisePool.query(
+            `INSERT INTO usuarios (nombre, correo, contrasena, rol, estado, ultimo_acceso)
+             VALUES (?, ?, ?, ?, ?, NOW())`,
+            [nombre, correo, contrasenaHash, rol, true]
+        )
+
+        // Devolver el usuario sin la contraseña
+        const [filas] = await promisePool.query(
+            'SELECT id, nombre, correo, rol, foto_url, estado FROM usuarios WHERE id = ?',
+            [resultado.insertId]
+        )
+        return filas[0]
+    }
+
+    // Verificar que una contraseña en texto plano coincida con el hash guardado
+    static async verificarContrasena(contrasenaPlana, contrasenaHash) {
+        if (!contrasenaHash) return false
+        return bcrypt.compare(contrasenaPlana, contrasenaHash)
     }
 }
 

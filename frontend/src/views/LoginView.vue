@@ -164,7 +164,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { devLogin } from '@/api/auth.js'
+import { login, registrar } from '@/api/auth.js'
 import { useUsuarioStore } from '@/stores/usuarioStore'
 
 const router = useRouter()
@@ -178,24 +178,34 @@ const mostrarContrasena = ref(false)
 const cargando = ref(false)
 const errorMsg = ref('')
 
+// Cada rol entra a su dashboard correspondiente
+const rutaSegunRol = (usuario) => (usuario?.rol === 'admin' ? '/usuarios' : '/calendario')
+
 const manejarFormulario = async () => {
   errorMsg.value = ''
+  cargando.value = true
 
-  if (pestanaActual.value === 'login') {
-    cargando.value = true
-    try {
-      const respuesta = await devLogin()
-      if (respuesta.data.success) {
-        store.establecerUsuario(respuesta.data.data)
-        router.push('/calendario')
-      }
-    } catch (e) {
-      errorMsg.value = 'Error al conectar con el servidor'
-    } finally {
-      cargando.value = false
+  try {
+    let respuesta
+    if (pestanaActual.value === 'login') {
+      respuesta = await login(correo.value, contrasena.value)
+    } else {
+      respuesta = await registrar({
+        nombre: nombreCompleto.value,
+        correo: correo.value,
+        contrasena: contrasena.value
+      })
     }
-  } else {
-    alert('Modo registro: usa el login de desarrollo por ahora')
+
+    if (respuesta.data.success) {
+      const usuario = respuesta.data.data
+      store.establecerUsuario(usuario)
+      router.push(rutaSegunRol(usuario))
+    }
+  } catch (e) {
+    errorMsg.value = e.response?.data?.message || 'Error al conectar con el servidor'
+  } finally {
+    cargando.value = false
   }
 }
 
