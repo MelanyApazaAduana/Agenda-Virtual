@@ -25,11 +25,15 @@ export const crearTarea = async (req, res) => {
             });
         }
 
-        // Crear tarea con nuevo elemento
-        const nuevaTarea = await TareaModel.CrearNuevaTarea({
+        // crear elemento y tarea
+        const elemento = await ElementoModel.crear({
             usuario_id: usuarioId,
             categoria_id: categoria_id || null,
-            titulo: titulo.trim(),
+            titulo: titulo.trim()
+        });
+
+        const nuevaTarea = await TareaModel.CrearNuevaTarea({
+            elemento_id: elemento.id,
             descripcion: descripcion || null,
             fecha_limite: fecha_limite || null,
             fecha_completado: fecha_completado || null,

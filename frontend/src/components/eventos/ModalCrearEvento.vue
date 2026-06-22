@@ -63,7 +63,7 @@
 
         <div class="grid grid-cols-2 gap-5">
           <div>
-            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Lugar (Optional)</label>
+            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Lugar (Opcional)</label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500">
@@ -74,7 +74,7 @@
               <input 
                 v-model="formulario.lugar" 
                 type="text" 
-                placeholder="Conference Room A" 
+                placeholder="Oruro" 
                 class="w-full pl-9 pr-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-400 placeholder-gray-400"
               />
             </div>
@@ -87,9 +87,9 @@
                 v-model="formulario.categoria"
                 class="w-full pl-4 pr-10 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-800 appearance-none cursor-pointer"
               >
-                <option value="work">Work (Deep Blue)</option>
-                <option value="personal">Personal</option>
-                <option value="design">Design Team</option>
+                <option value="work">Personal</option>
+                <option value="personal">Trabajo</option>
+                <option value="design">Estudio</option>
               </select>
               <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500">
@@ -169,6 +169,5 @@ const guardarEvento = () => {
     return
   }
   emit('guardar', formulario.value)
-  emit('cerrar')
 }
 </script>

@@ -41,7 +41,7 @@ export const listarNotas = async (req, res) => {
         console.error('Error al listar notas:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al listar las notas',
+            message: 'Error al listar las notas',
             error: error.message
         });
     }
@@ -57,7 +57,7 @@ export const obtenerNota = async (req, res) => {
         if (!nota) {
             return res.status(404).json({
                 success: false,
-                mensaje: 'Nota no encontrada'
+                message: 'Nota no encontrada'
             });
         }
 
@@ -69,7 +69,7 @@ export const obtenerNota = async (req, res) => {
         console.error('Error al obtener nota:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al obtener la nota',
+            message: 'Error al obtener la nota',
             error: error.message
         });
     }
@@ -83,7 +83,7 @@ export const crearNota = async (req, res) => {
         if (!titulo || titulo.trim() === '') {
             return res.status(400).json({
                 success: false,
-                mensaje: 'El título es obligatorio'
+                message: 'El título es obligatorio'
             });
         }
 
@@ -99,14 +99,14 @@ export const crearNota = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            mensaje: 'Nota creada exitosamente',
+            message: 'Nota creada exitosamente',
             data: nuevaNota
         });
     } catch (error) {
         console.error('Error al crear nota:', error);
         res.status(400).json({
             success: false,
-            mensaje: 'Error al crear la nota',
+            message: 'Error al crear la nota',
             error: error.message
         });
     }
@@ -123,7 +123,7 @@ export const actualizarNota = async (req, res) => {
         if (titulo !== undefined && titulo.trim() === '') {
             return res.status(400).json({
                 success: false,
-                mensaje: 'El título no puede estar vacío'
+                message: 'El título no puede estar vacío'
             });
         }
 
@@ -139,14 +139,14 @@ export const actualizarNota = async (req, res) => {
 
         res.json({
             success: true,
-            mensaje: 'Nota actualizada exitosamente',
+            message: 'Nota actualizada exitosamente',
             data: notaActualizada
         });
     } catch (error) {
         console.error('Error al actualizar nota:', error);
         res.status(400).json({
             success: false,
-            mensaje: 'Error al actualizar la nota',
+            message: 'Error al actualizar la nota',
             error: error.message
         });
     }
@@ -167,7 +167,7 @@ export const autoguardarNota = async (req, res) => {
             if (!notaExistente) {
                 return res.status(404).json({
                     success: false,
-                    mensaje: 'Nota no encontrada'
+                    message: 'Nota no encontrada'
                 });
             }
 
@@ -193,14 +193,14 @@ export const autoguardarNota = async (req, res) => {
 
         res.json({
             success: true,
-            mensaje: 'Nota autoguardada como borrador',
+            message: 'Nota autoguardada como borrador',
             data: notaActualizada
         });
     } catch (error) {
         console.error('Error al autoguardar nota:', error);
         res.status(400).json({
             success: false,
-            mensaje: 'Error al autoguardar la nota',
+            message: 'Error al autoguardar la nota',
             error: error.message
         });
     }
@@ -218,7 +218,7 @@ export const guardarNota = async (req, res) => {
         if (!notaExistente) {
             return res.status(404).json({
                 success: false,
-                mensaje: 'Nota no encontrada'
+                message: 'Nota no encontrada'
             });
         }
 
@@ -226,7 +226,7 @@ export const guardarNota = async (req, res) => {
         if (titulo !== undefined && titulo.trim() === '') {
             return res.status(400).json({
                 success: false,
-                mensaje: 'El título no puede estar vacío'
+                message: 'El título no puede estar vacío'
             });
         }
 
@@ -241,14 +241,14 @@ export const guardarNota = async (req, res) => {
 
         res.json({
             success: true,
-            mensaje: 'Nota guardada exitosamente',
+            message: 'Nota guardada exitosamente',
             data: notaGuardada
         });
     } catch (error) {
         console.error('Error al guardar nota:', error);
         res.status(400).json({
             success: false,
-            mensaje: 'Error al guardar la nota',
+            message: 'Error al guardar la nota',
             error: error.message
         });
     }
@@ -265,7 +265,7 @@ export const cambiarEstadoNota = async (req, res) => {
         if (!estado) {
             return res.status(400).json({
                 success: false,
-                mensaje: 'El estado es requerido'
+                message: 'El estado es requerido'
             });
         }
 
@@ -273,7 +273,7 @@ export const cambiarEstadoNota = async (req, res) => {
         if (!estadosValidos.includes(estado)) {
             return res.status(400).json({
                 success: false,
-                mensaje: 'Estado no válido. Debe ser: borrador, guardado o archivado'
+                message: 'Estado no válido. Debe ser: borrador, guardado o archivado'
             });
         }
 
@@ -281,14 +281,14 @@ export const cambiarEstadoNota = async (req, res) => {
 
         res.json({
             success: true,
-            mensaje: `Estado cambiado a '${estado}'`,
+            message: `Estado cambiado a '${estado}'`,
             data: notaActualizada
         });
     } catch (error) {
         console.error('Error al cambiar estado:', error);
         res.status(400).json({
             success: false,
-            mensaje: 'Error al cambiar el estado de la nota',
+            message: 'Error al cambiar el estado de la nota',
             error: error.message
         });
     }
@@ -304,14 +304,14 @@ export const archivarNota = async (req, res) => {
 
         res.json({
             success: true,
-            mensaje: 'Nota archivada exitosamente',
+            message: 'Nota archivada exitosamente',
             data: notaArchivada
         });
     } catch (error) {
         console.error('Error al archivar nota:', error);
         res.status(400).json({
             success: false,
-            mensaje: 'Error al archivar la nota',
+            message: 'Error al archivar la nota',
             error: error.message
         });
     }
@@ -327,14 +327,14 @@ export const restaurarNota = async (req, res) => {
 
         res.json({
             success: true,
-            mensaje: 'Nota restaurada exitosamente',
+            message: 'Nota restaurada exitosamente',
             data: notaRestaurada
         });
     } catch (error) {
         console.error('Error al restaurar nota:', error);
         res.status(400).json({
             success: false,
-            mensaje: 'Error al restaurar la nota',
+            message: 'Error al restaurar la nota',
             error: error.message
         });
     }
@@ -350,19 +350,19 @@ export const eliminarNota = async (req, res) => {
         if (!eliminado) {
             return res.status(404).json({
                 success: false,
-                mensaje: 'Nota no encontrada'
+                message: 'Nota no encontrada'
             });
         }
 
         res.json({
             success: true,
-            mensaje: 'Nota eliminada exitosamente'
+            message: 'Nota eliminada exitosamente'
         });
     } catch (error) {
         console.error('Error al eliminar nota:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al eliminar la nota',
+            message: 'Error al eliminar la nota',
             error: error.message
         });
     }
@@ -384,7 +384,7 @@ export const listarNotasArchivadas = async (req, res) => {
         console.error('Error al listar notas archivadas:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al listar las notas archivadas',
+            message: 'Error al listar las notas archivadas',
             error: error.message
         });
     }
@@ -399,7 +399,7 @@ export const listarNotasPorEvento = async (req, res) => {
         if (!eventoId) {
             return res.status(400).json({
                 success: false,
-                mensaje: 'El ID del evento es requerido'
+                message: 'El ID del evento es requerido'
             });
         }
 
@@ -414,7 +414,7 @@ export const listarNotasPorEvento = async (req, res) => {
         console.error('Error al listar notas por evento:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al listar las notas del evento',
+            message: 'Error al listar las notas del evento',
             error: error.message
         });
     }
@@ -429,7 +429,7 @@ export const buscarNotas = async (req, res) => {
         if (!texto || texto.trim() === '') {
             return res.status(400).json({
                 success: false,
-                mensaje: 'El texto de búsqueda es requerido'
+                message: 'El texto de búsqueda es requerido'
             });
         }
 
@@ -445,7 +445,7 @@ export const buscarNotas = async (req, res) => {
         console.error('Error al buscar notas:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al buscar notas',
+            message: 'Error al buscar notas',
             error: error.message
         });
     }
@@ -470,7 +470,7 @@ export const obtenerNotasRecientes = async (req, res) => {
         console.error('Error al obtener notas recientes:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al obtener las notas recientes',
+            message: 'Error al obtener las notas recientes',
             error: error.message
         });
     }
@@ -495,7 +495,7 @@ export const obtenerResumenNotas = async (req, res) => {
         console.error('Error al obtener resumen de notas:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al obtener el resumen de notas',
+            message: 'Error al obtener el resumen de notas',
             error: error.message
         });
     }

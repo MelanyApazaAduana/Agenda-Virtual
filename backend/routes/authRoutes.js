@@ -61,7 +61,7 @@ router.post('/dev-login', async (req, res) => {
       )
     } else {
       const [resultado] = await promisePool.query(
-        `INSERT INTO usuarios (nombre, correo, contraseña, rol, estado, ultimo_acceso)
+        `INSERT INTO usuarios (nombre, correo, contrasena, rol, estado, ultimo_acceso)
          VALUES ('Usuario Dev', 'dev@test.com', '', 'usuario', true, NOW())`
       )
       const [nuevo] = await promisePool.query(

@@ -15,4 +15,4 @@ export const obtenerResumenIngresos = (anio, mes) =>
   api.get('/ingresos/resumen', { params: { anio, mes } })
 
 export const obtenerIngresosPorRango = (fechaDesde, fechaHasta) =>
-  api.get('/ingresos/rango', { params: { fechaDesde, fechaHasta } })
+  api.get('/ingresos/rango', { params: { fecha_desde: fechaDesde, fecha_hasta: fechaHasta } })

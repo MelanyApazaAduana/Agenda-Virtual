@@ -20,6 +20,7 @@ import calendarioRoutes from './routes/calendarioRoutes.js';
 
 
 import { testConnection } from './config/database.js'
+import { inicializarBaseDeDatos } from './config/initDb.js'
 
 dotenv.config()
 
@@ -104,7 +105,19 @@ cron.schedule('0 * * * *', async () => {
 //     }
 // }, 5000); // Espera 5 segundos después de iniciar
 
-app.listen(PORT, async () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-    await testConnection()
-})
+// Arranque del servidor: primero asegura que la base de datos exista
+const iniciarServidor = async () => {
+    try {
+        await inicializarBaseDeDatos()  // crea BD/tablas si faltan, conserva datos
+    } catch (error) {
+        console.error('No se pudo inicializar la base de datos. Abortando arranque.');
+        process.exit(1);
+    }
+
+    app.listen(PORT, async () => {
+        console.log(`Servidor corriendo en http://localhost:${PORT}`);
+        await testConnection()
+    })
+}
+
+iniciarServidor()

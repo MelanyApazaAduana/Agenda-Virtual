@@ -46,5 +46,6 @@ const guardarNota = (datos) => {
     contenido: datos.contenido,
     fecha: 'Ahora'
   })
+  mostrarModal.value = false
 }
 </script>

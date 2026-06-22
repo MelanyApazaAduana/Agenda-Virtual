@@ -482,9 +482,11 @@ const abrirFormulario = (tipo) => {
 
 const cerrarModal = () => {
   modalTipo.value = null
-  const query = { ...route.query }
-  delete query.crear
-  router.replace({ query })
+  if (route.query.crear) {
+    const query = { ...route.query }
+    delete query.crear
+    router.replace({ query })
+  }
 }
 
 const mapaCategoria = { work: 1, personal: 2, design: 3 }
@@ -497,13 +499,10 @@ const guardarEvento = async (datos) => {
       fecha_inicio: datos.fechaInicio || fechaParaCrear.value + 'T09:00:00',
       fecha_fin: datos.fechaFin || fechaParaCrear.value + 'T10:00:00',
       ubicacion: datos.lugar || null,
-      color_etiqueta: mapaColorEtiqueta[datos.categoria] || null,
-      categoria_id: mapaCategoria[datos.categoria] || null
+      color_etiqueta: mapaColorEtiqueta[datos.categoria] || null
     }
-    const respuesta = await crearEvento(payload)
-    if (respuesta.data.data) {
-      eventos.value.push(respuesta.data.data)
-    }
+    await crearEvento(payload)
+    await cargarDatos()
     cerrarModal()
   } catch (error) {
     const mensaje = error.response?.data?.message || 'Error al crear el evento'
@@ -522,10 +521,8 @@ const guardarTarea = async () => {
       fecha_limite: fechaParaCrear.value,
       prioridad: formTarea.value.prioridad
     }
-    const respuesta = await crearTarea(payload)
-    if (respuesta.data.data) {
-      tareas.value.push(respuesta.data.data)
-    }
+    await crearTarea(payload)
+    await cargarDatos()
     cerrarModal()
   } catch (error) {
     const mensaje = error.response?.data?.message || 'Error al crear la tarea'
@@ -543,10 +540,8 @@ const guardarNota = async () => {
       titulo: formNota.value.titulo,
       contenido: formNota.value.contenido || null
     }
-    const respuesta = await crearNota(payload)
-    if (respuesta.data.data) {
-      notas.value.push(respuesta.data.data)
-    }
+    await crearNota(payload)
+    await cargarDatos()
     cerrarModal()
   } catch (error) {
     const mensaje = error.response?.data?.message || 'Error al crear la nota'

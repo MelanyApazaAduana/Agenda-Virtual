@@ -46,7 +46,7 @@ class UsuarioModel {
             // 3. Crear usuario nuevo
             const [resultado] = await promisePool.query(
                 `INSERT INTO usuarios 
-                (nombre, correo, contraseña, google_id, foto_url, rol, estado, ultimo_acceso) 
+                (nombre, correo, contrasena, google_id, foto_url, rol, estado, ultimo_acceso) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
                 [nombre, correo, '', googleId, foto_url, 'usuario', true]
             )

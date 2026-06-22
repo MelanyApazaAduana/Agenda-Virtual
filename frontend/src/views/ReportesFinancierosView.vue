@@ -44,7 +44,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-600"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
               </span>
             </div>
-            <p class="text-2xl font-bold text-gray-900">${{ formato(resumenIngresos) }}</p>
+            <p class="text-2xl font-bold text-gray-900">Bs. {{ formato(resumenIngresos) }}</p>
             <p class="text-xs text-gray-500 mt-1">Total ingresos del período</p>
           </div>
 
@@ -55,7 +55,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-red-600"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.281 5.941" /></svg>
               </span>
             </div>
-            <p class="text-2xl font-bold text-gray-900">$0.00</p>
+            <p class="text-2xl font-bold text-gray-900">Bs. 0.00</p>
             <p class="text-xs text-gray-500 mt-1">Módulo de gastos próximamente</p>
           </div>
 
@@ -66,7 +66,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-600"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" /></svg>
               </span>
             </div>
-            <p class="text-2xl font-bold text-gray-900">${{ formato(resumenIngresos) }}</p>
+            <p class="text-2xl font-bold text-gray-900">Bs. {{ formato(resumenIngresos) }}</p>
             <p class="text-xs text-gray-500 mt-1">Balance actual (solo ingresos)</p>
           </div>
 
@@ -86,7 +86,7 @@
           <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest">Ingresos por categoría</h3>
-              <span class="text-[11px] text-gray-400 font-medium">Total: ${{ formato(totalPorCategoria) }}</span>
+              <span class="text-[11px] text-gray-400 font-medium">Total: Bs. {{ formato(totalPorCategoria) }}</span>
             </div>
             <div class="space-y-4">
               <div v-for="cat in ingresosPorCategoria" :key="cat.categoria_nombre || 'sin-categoria'">
@@ -95,7 +95,7 @@
                     <div class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: cat.categoria_color || '#6B7280' }"></div>
                     <span class="font-medium text-gray-700">{{ cat.categoria_nombre || 'Sin categoría' }}</span>
                   </div>
-                  <span class="font-bold text-gray-900">${{ formato(cat.total) }}</span>
+                  <span class="font-bold text-gray-900">Bs. {{ formato(cat.total) }}</span>
                 </div>
                 <div class="bg-gray-100 rounded-full h-2.5 overflow-hidden">
                   <div
@@ -114,7 +114,7 @@
           <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest">Ingresos por evento</h3>
-              <span class="text-[11px] text-gray-400 font-medium">Total: ${{ formato(totalPorEvento) }}</span>
+              <span class="text-[11px] text-gray-400 font-medium">Total: Bs. {{ formato(totalPorEvento) }}</span>
             </div>
             <div class="space-y-3">
               <div v-for="ev in ingresosPorEvento" :key="ev.evento_titulo || 'sin-evento'" class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
@@ -122,7 +122,7 @@
                   <p class="text-sm font-medium text-gray-700">{{ ev.evento_titulo || 'Sin evento' }}</p>
                   <p class="text-xs text-gray-400">{{ ev.total_transacciones }} transacciones</p>
                 </div>
-                <span class="font-bold text-gray-900">${{ formato(ev.total) }}</span>
+                <span class="font-bold text-gray-900">Bs. {{ formato(ev.total) }}</span>
               </div>
               <div v-if="ingresosPorEvento.length === 0" class="text-center py-6 text-gray-400 text-sm">
                 No hay ingresos vinculados a eventos

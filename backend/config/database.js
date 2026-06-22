@@ -9,6 +9,7 @@ const pool = mysql.createPool({
     password: process.env.DB_PASSWORD || '',  
     database: process.env.DB_NAME || 'agenda_virtual',
     port: process.env.DB_PORT || 3306,
+    charset: 'utf8mb4',  // soporte de acentos y ñ (caracteres multibyte)
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

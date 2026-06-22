@@ -162,6 +162,5 @@ const crearTarea = () => {
     return
   }
   emit('guardar', formulario.value)
-  emit('cerrar')
 }
 </script>

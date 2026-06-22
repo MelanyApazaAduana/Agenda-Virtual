@@ -140,10 +140,8 @@ class EventoModel {
             return false;
         }
         
-        // Eliminar evento (por la FK, se puede eliminar independientemente)
-        await this.eliminar(id, usuarioId);
-        
-        // Eliminar el elemento (esto eliminará en cascada si hay otras relaciones)
+        // Eliminar el elemento; el evento se borra en cascada por la FK
+        // (eventos.elemento_id REFERENCES elementos ON DELETE CASCADE)
         const sql = 'DELETE FROM elementos WHERE id = ? AND usuario_id = ?';
         const [result] = await promisePool.execute(sql, [evento.elemento_id, usuarioId]);
         return result.affectedRows > 0;

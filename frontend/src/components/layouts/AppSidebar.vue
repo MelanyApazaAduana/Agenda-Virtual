@@ -81,7 +81,7 @@
           <div class="bg-green-50 rounded-xl px-3 py-2.5">
             <div class="flex justify-between items-center mb-1">
               <span class="text-[10px] font-medium text-gray-500">Total cuenta</span>
-              <span class="text-xs font-bold text-gray-900">$12,500.00</span>
+              <span class="text-xs font-bold text-gray-900">Bs. 12,500.00</span>
             </div>
             <div class="h-1.5 bg-green-100 rounded-full overflow-hidden">
               <div class="h-full bg-green-500 rounded-full" style="width: 75%"></div>
@@ -90,7 +90,7 @@
           <div class="bg-red-50 rounded-xl px-3 py-2.5">
             <div class="flex justify-between items-center mb-1">
               <span class="text-[10px] font-medium text-gray-500">Egresos del mes</span>
-              <span class="text-xs font-bold text-gray-900">$3,200.00</span>
+              <span class="text-xs font-bold text-gray-900">Bs. 3,200.00</span>
             </div>
             <div class="h-1.5 bg-red-100 rounded-full overflow-hidden">
               <div class="h-full bg-red-400 rounded-full" style="width: 40%"></div>

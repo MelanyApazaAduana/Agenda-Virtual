@@ -238,10 +238,8 @@ const guardarTarea = async (datos) => {
       prioridad: datos.prioridad || 'media',
       fecha_limite: datos.fechaVencimiento || null
     }
-    const respuesta = await crearTarea(payload)
-    if (respuesta.data.data) {
-      tareas.value.push(respuesta.data.data)
-    }
+    await crearTarea(payload)
+    mostrarModal.value = false
   } catch (error) {
     const mensaje = error.response?.data?.message || 'Error al crear la tarea'
     alert(mensaje)

@@ -5,6 +5,8 @@ package-lock.json
 # Base de datos local
 *.sql
 *.db
+# ...pero el esquema del proyecto SÍ se versiona (initDb lo usa al arrancar)
+!backend/migrations/init.sql
 
 # Variables de entorno
 .env

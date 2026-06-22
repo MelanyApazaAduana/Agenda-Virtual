@@ -1,45 +1,90 @@
 # Frontend — Agenda Virtual
 
+SPA de la agenda virtual: calendario (mes/semana/día), tareas, notas, productividad, usuarios y módulo financiero (ingresos, gastos, reportes). Construida con Vue 3 y conectada al backend Express vía Axios con sesión por cookie.
+
 ## Stack
 - **Vue 3** (Composition API + `<script setup>`)
-- **Vite** 8
-- **Pinia** — estado global
-- **Axios** — peticiones HTTP
+- **Vite 8** — bundler y dev server
+- **Vue Router 4** — enrutamiento con layouts dinámicos y guard de auth
+- **Pinia** — estado global (sesión del usuario)
+- **Axios** — peticiones HTTP (`withCredentials`)
 - **Day.js** — manejo de fechas
 - **VueUse** — utilidades reactivas
-- **TailwindCSS** 3 — estilos
+- **Tailwind CSS 3** — estilos (mobile first)
 
-## Estructura de componentes
+## Estructura
 
-| Componente   | Estado | Descripción |
-|-------------|--------|-------------|
-| `Login.vue` | ✅ | Formulario de inicio de sesión y registro con tabs. Valida credenciales fijas (correo: `melany@ejemplo.com`, pass: `melany`). Emite `login-success` al autenticar. |
-| `DashboardCalendario.vue` | ✅ | Pantalla principal con sidebar, selector de vista (Día/Semana/Mes) y cuadrícula de calendario. Botones "Nuevo" y "+" abren el modal de creación. Navega a Tareas vía `emit('navegar')`. |
-| `ModalCrearEvento.vue` | ✅ | Modal con formulario para crear eventos (título, fecha, hora, ubicación, descripción, color). Emite `guardar` con los datos y `cerrar`. |
-| `GestionTareas.vue` | ✅ | Panel Kanban con columnas Vencidos/En Proceso/Próximos. Tareas reactivas. Botones "Creación Rápida" y "+" abren `ModalCrearTarea`. Navega a Calendario vía `emit('navegar')`. |
-| `ModalCrearTarea.vue` | ✅ | Modal con formulario para crear tareas (nombre, prioridad, fecha, asignado, etiquetas, descripción). Emite `guardar` y `cerrar`. |
-| `GestionNotas.vue` | ✅ | Página de notas con grid de tarjetas. Botón "Nueva Nota" abre `ModalCrearNota`. |
-| `ModalCrearNota.vue` | ✅ | Modal para crear notas (título, categoría, contenido). Emite `guardar` y `cerrar`. |
-| `GestionProductividad.vue` | ✅ | Dashboard de productividad con gráfico de horas pico y ranking de equipo. |
-| `GestionUsuarios.vue` | ✅ | Tabla de administración de usuarios con roles y políticas de seguridad. |
-| `CalendarioSemanal.vue` | ⚠️ Sin uso directo | Componente de semana independiente, su lógica se integró en `DashboardCalendario`. |
+```
+frontend/src/
+├── main.js                 # bootstrap: Pinia + Router + CSS
+├── App.vue                 # resuelve el layout dinámico según meta.layout
+├── api/                    # axios.js (instancia base) + un archivo por recurso
+│   ├── axios.js            # baseURL http://localhost:3000, interceptor 401 → /login
+│   ├── auth.js, calendario.js, categorias.js, eventos.js,
+│   └── ingresos.js, notas.js, tareas.js
+├── stores/
+│   └── usuarioStore.js     # sesión: verificarSesion / cerrarSesion
+├── router/
+│   └── index.js            # rutas + beforeEach (requiereAuth)
+├── layouts/
+│   ├── AuthLayout.vue      # pantallas sin nav (login)
+│   └── DashboardLayout.vue # nav + sidebar para la app
+├── components/
+│   ├── layouts/            # AppHeader, AppSidebar
+│   ├── ui/                 # AppFab
+│   ├── eventos/, notas/, tareas/   # ModalCrear*.vue
+└── views/                  # una por ruta (sufijo View / vistas de calendario)
+```
 
-## Navegación
-- `App.vue` maneja la vista principal con la variable `vista` ('calendario' | 'tareas' | 'notas' | 'productividad' | 'usuarios').
-- Todas las páginas emiten `navegar` desde su sidebar para cambiar de sección. Los links están implementados como `<button>` (no `<a href="#">`) para evitar recargas.
-| `HelloWorld.vue` | ❌ Sin uso | Componente por defecto de Vite, sin implementar. |
+## Rutas
 
-## Flujo de navegación
-- `App.vue` controla la vista con una variable reactiva `usuario`.
-- Sin sesión → `Login`.
-- Con sesión → `Dashboard`.
+| Ruta | Vista | Layout | Auth |
+|------|-------|--------|------|
+| `/` | → redirige a `/calendario` | — | — |
+| `/login` | `LoginView` | AuthLayout | público |
+| `/calendario` | `DashboardCalendarioView` (vista mes) | Dashboard | ✅ |
+| `/semanal` | `CalendarioSemanal` | Dashboard | ✅ |
+| `/diario` | `CalendarioDiario` | Dashboard | ✅ |
+| `/tareas` | `GestionTareasView` | Dashboard | ✅ |
+| `/notas` | `GestionNotasView` | Dashboard | ✅ |
+| `/productividad` | `GestionProductividadView` | Dashboard | ✅ |
+| `/usuarios` | `GestionUsuariosView` | Dashboard | ✅ |
+| `/ingresos/registrar` | `RegistrarIngresoView` | Dashboard | ✅ |
+| `/ingresos/reportes` | `ReportesFinancierosView` | Dashboard | ✅ |
+| `/gastos/registrar` | `RegistrarGastoView` | Dashboard | ✅ |
 
-## Decisiones
-- Las credenciales de login son quemadas (hardcoded) para prototipo.
-- El placeholder del nombre en registro se cambió a "Melany Apaza".
+## Layouts
+- El layout se asigna en el router vía `meta.layout` (`'AuthLayout'` | `'DashboardLayout'`).
+- `App.vue` lo resuelve dinámicamente con `<component :is="currentLayout">` y `<router-view />`.
+- Si no se especifica, usa `DashboardLayout` por defecto.
+
+## Autenticación
+- Al montar, `App.vue` llama a `usuarioStore.verificarSesion()` (`GET /auth/verificar`).
+- El guard `router.beforeEach` redirige a `/login` las rutas con `requiereAuth` si no hay sesión.
+- El interceptor de Axios redirige a `/login` ante un `401`.
+- El login se hace con Google OAuth (redirección a `/auth/google` en el backend) y existe `dev-login` para desarrollo.
+
+## Convenciones
+- Siempre `<script setup>` (Composition API); nunca Options API ni `this`.
+- Las llamadas HTTP van siempre por `src/api/`, nunca Axios directo en componentes.
+- Stores Pinia, nombres de variables/funciones en español, archivos `PascalCase.vue`.
+- Tailwind mobile first; sin estilos en línea si Tailwind lo resuelve.
+
+## Variables de entorno (`frontend/.env`)
+
+```bash
+VITE_API_URL=http://localhost:3000
+```
+
+> El dev server además proxea `/api` a `http://localhost:3000` (ver `vite.config.js`).
 
 ## Comandos
+
 ```bash
-npm run dev      # desarrollo en :5173
-npm run build    # build producción
+npm install
+npm run dev       # desarrollo en http://localhost:5173
+npm run build     # build de producción → dist/
+npm run preview   # previsualizar el build
 ```
+
+> Requiere el backend corriendo en `http://localhost:3000` para autenticación y datos.

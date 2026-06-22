@@ -156,6 +156,5 @@ const guardarNota = () => {
     return
   }
   emit('guardar', formulario.value)
-  emit('cerrar')
 }
 </script>

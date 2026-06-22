@@ -335,7 +335,7 @@ class TareaModel {
             LEFT JOIN categorias c ON el.categoria_id = c.id
             LEFT JOIN ingresos i ON t.ingreso_id = i.id
             WHERE t.elemento_id = ? AND el.usuario_id = ?
-            ORDER BY t.fecha_limite ASC NULLS LAST, t.creado_en DESC
+            ORDER BY ISNULL(t.fecha_limite) ASC, t.fecha_limite ASC, t.creado_en DESC
         `;
         const [rows] = await promisePool.execute(sql, [elementoId, usuarioId]);
         return rows;

@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-800">
     <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
-      <AppHeader />
+      <AppHeader @cerrarSesion="cerrarSesion" @irAPerfil="irAPerfil" @cambiarVista="cambiarVista" />
     </header>
     <div class="flex flex-1 overflow-hidden">
       <AppSidebar/>
@@ -13,6 +13,27 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import AppSidebar from '@/components/layouts/AppSidebar.vue'
 import AppHeader from '@/components/layouts/AppHeader.vue'
+import { useUsuarioStore } from '@/stores/usuarioStore'
+
+const router = useRouter()
+const usuarioStore = useUsuarioStore()
+
+const cerrarSesion = () => {
+  usuarioStore.cerrarSesion()
+}
+
+const irAPerfil = () => {
+  router.push('/usuarios')
+}
+
+const cambiarVista = (vista) => {
+  const rutas = { dia: '/diario', semana: '/semanal', mes: '/calendario' }
+  const destino = rutas[vista]
+  if (destino && router.currentRoute.value.path !== destino) {
+    router.push(destino)
+  }
+}
 </script>
