@@ -111,6 +111,7 @@ const iniciarServidor = async () => {
         await inicializarBaseDeDatos()  // crea BD/tablas si faltan, conserva datos
     } catch (error) {
         console.error('No se pudo inicializar la base de datos. Abortando arranque.');
+        console.error('Detalle:', error.code || error.message);
         process.exit(1);
     }
 

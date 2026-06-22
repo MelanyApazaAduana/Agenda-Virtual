@@ -12,17 +12,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Es idempotente: si la base de datos ya tiene datos, NO se borra nada
 // (el script init.sql usa CREATE DATABASE/TABLE IF NOT EXISTS).
 export const inicializarBaseDeDatos = async () => {
-    // Conexion SIN base de datos seleccionada: la BD podria no existir todavia.
-    const conexion = await mysql.createConnection({
-        host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || 3306,
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || '',
-        multipleStatements: true,  // init.sql contiene varias sentencias
-        charset: 'utf8mb4'         // acentos y ñ
-    });
+    const host = process.env.DB_HOST || 'localhost';
+    const port = process.env.DB_PORT || 3306;
+    let conexion;
 
     try {
+        // Conexion SIN base de datos seleccionada: la BD podria no existir todavia.
+        conexion = await mysql.createConnection({
+            host,
+            port,
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            multipleStatements: true,  // init.sql contiene varias sentencias
+            charset: 'utf8mb4'         // acentos y ñ
+        });
+
         const rutaSql = path.join(__dirname, '..', 'migrations', 'init.sql');
         const sql = await fs.readFile(rutaSql, 'utf8');
 
@@ -38,10 +42,17 @@ export const inicializarBaseDeDatos = async () => {
 
         console.log('Base de datos verificada/creada correctamente (datos existentes conservados)');
     } catch (error) {
-        console.error('Error al inicializar la base de datos:', error.message);
+        // Mensajes claros segun la causa mas comun
+        if (error.code === 'ECONNREFUSED') {
+            console.error(`No se pudo conectar a MySQL en ${host}:${port}. ¿Está el servidor MySQL en ejecución?`);
+        } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
+            console.error('Acceso denegado a MySQL. Revisa DB_USER y DB_PASSWORD en backend/.env');
+        } else {
+            console.error('Error al inicializar la base de datos:', error.message);
+        }
         throw error;
     } finally {
-        await conexion.end();
+        if (conexion) await conexion.end();
     }
 };
 
