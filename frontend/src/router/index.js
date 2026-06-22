@@ -10,6 +10,7 @@ const GestionUsuariosView = () => import('@/views/GestionUsuariosView.vue')
 const RegistrarIngresoView = () => import('@/views/RegistrarIngresoView.vue')
 const ReportesFinancierosView = () => import('@/views/ReportesFinancierosView.vue')
 const RegistrarGastoView = () => import('@/views/RegistrarGastoView.vue')
+const GestionGastosView = () => import('@/views/GestionGastosView.vue')
 const CalendarioSemView = () => import('@/views/CalendarioSemanal.vue')
 const CalendarioDiaView = () => import('@/views/CalendarioDiario.vue')
 
@@ -82,6 +83,12 @@ const routes = [
     path: '/gastos/registrar',
     name: 'registrar-gasto',
     component: RegistrarGastoView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/gastos',
+    name: 'gastos',
+    component: GestionGastosView,
     meta: { layout: 'DashboardLayout', requiereAuth: true }
   }
 ]

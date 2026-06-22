@@ -111,6 +111,9 @@
             Gastos
           </router-link>
         </div>
+        <router-link to="/gastos" class="flex items-center justify-center gap-1.5 py-2 mt-2 rounded-xl text-[11px] font-semibold bg-gray-50 text-gray-600 hover:bg-gray-100 transition">
+          Ver gastos
+        </router-link>
       </div>
     </div>
 

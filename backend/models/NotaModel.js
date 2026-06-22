@@ -54,11 +54,12 @@ class NotaModel {
     // Obtener todas las notas de un usuario
     static async listarPorUsuario(usuarioId, filtros = {}) {
         let sql = `
-            SELECT n.*, 
-                   e.titulo as evento_titulo,
+            SELECT n.*,
+                   el.titulo as evento_titulo,
                    e.estado as evento_estado
             FROM notas n
             LEFT JOIN eventos e ON n.evento_id = e.id
+            LEFT JOIN elementos el ON e.elemento_id = el.id
             WHERE n.usuario_id = ?
         `;
         const params = [usuarioId];
@@ -128,11 +129,12 @@ class NotaModel {
     // Obtener una nota por ID
     static async obtenerPorId(id, usuarioId) {
         const sql = `
-            SELECT n.*, 
-                   e.titulo as evento_titulo,
+            SELECT n.*,
+                   el.titulo as evento_titulo,
                    e.estado as evento_estado
             FROM notas n
             LEFT JOIN eventos e ON n.evento_id = e.id
+            LEFT JOIN elementos el ON e.elemento_id = el.id
             WHERE n.id = ? AND n.usuario_id = ?
         `;
         const [rows] = await promisePool.execute(sql, [id, usuarioId]);

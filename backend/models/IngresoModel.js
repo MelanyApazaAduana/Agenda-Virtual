@@ -56,11 +56,12 @@ class IngresoModel {
             SELECT i.*, 
                    c.nombre as categoria_nombre, 
                    c.color_hex as categoria_color,
-                   e.titulo as evento_titulo,
+                   el.titulo as evento_titulo,
                    e.estado as evento_estado
             FROM ingresos i
             LEFT JOIN categorias c ON i.categoria_id = c.id
             LEFT JOIN eventos e ON i.evento_id = e.id
+            LEFT JOIN elementos el ON e.elemento_id = el.id
             WHERE i.usuario_id = ?
         `;
         const params = [usuarioId];
@@ -113,11 +114,12 @@ class IngresoModel {
             SELECT i.*, 
                    c.nombre as categoria_nombre, 
                    c.color_hex as categoria_color,
-                   e.titulo as evento_titulo,
+                   el.titulo as evento_titulo,
                    e.estado as evento_estado
             FROM ingresos i
             LEFT JOIN categorias c ON i.categoria_id = c.id
             LEFT JOIN eventos e ON i.evento_id = e.id
+            LEFT JOIN elementos el ON e.elemento_id = el.id
             WHERE i.id = ? AND i.usuario_id = ?
         `;
         const [rows] = await promisePool.execute(sql, [id, usuarioId]);
@@ -253,20 +255,21 @@ class IngresoModel {
     // Obtener ingresos agrupados por evento
     static async obtenerPorEvento(usuarioId, anio, mes) {
         const sql = `
-            SELECT 
+            SELECT
                 e.id as evento_id,
-                e.titulo as evento_titulo,
+                el.titulo as evento_titulo,
                 e.estado as evento_estado,
                 COUNT(i.id) as cantidad_ingresos,
                 SUM(i.monto) as total_ingresos,
                 AVG(i.monto) as promedio_ingresos
             FROM ingresos i
             LEFT JOIN eventos e ON i.evento_id = e.id
-            WHERE i.usuario_id = ? 
-                AND YEAR(i.fecha) = ? 
+            LEFT JOIN elementos el ON e.elemento_id = el.id
+            WHERE i.usuario_id = ?
+                AND YEAR(i.fecha) = ?
                 AND MONTH(i.fecha) = ?
                 AND i.evento_id IS NOT NULL
-            GROUP BY e.id, e.titulo, e.estado
+            GROUP BY e.id, el.titulo, e.estado
             ORDER BY total_ingresos DESC
         `;
         const [rows] = await promisePool.execute(sql, [usuarioId, anio, mes]);
@@ -283,13 +286,14 @@ class IngresoModel {
     // Obtener ingresos por rango de fechas (para reportes)
     static async obtenerPorRangoFechas(usuarioId, fechaDesde, fechaHasta) {
         const sql = `
-            SELECT i.*, 
-                   c.nombre as categoria_nombre, 
+            SELECT i.*,
+                   c.nombre as categoria_nombre,
                    c.color_hex as categoria_color,
-                   e.titulo as evento_titulo
+                   el.titulo as evento_titulo
             FROM ingresos i
             LEFT JOIN categorias c ON i.categoria_id = c.id
             LEFT JOIN eventos e ON i.evento_id = e.id
+            LEFT JOIN elementos el ON e.elemento_id = el.id
             WHERE i.usuario_id = ? AND i.fecha BETWEEN ? AND ?
             ORDER BY i.fecha DESC
         `;

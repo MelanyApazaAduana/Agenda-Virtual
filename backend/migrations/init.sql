@@ -169,11 +169,11 @@ CREATE TABLE IF NOT EXISTS `recordatorios` (
     INDEX (`usuario_id`, `fecha_envio`)
 );
 
--- TABLA DE GASTOS (asociados a tareas o eventos)
+-- TABLA DE GASTOS (asociados a tareas/eventos o generales)
 CREATE TABLE IF NOT EXISTS `gastos` (
     `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
     `usuario_id` INTEGER NOT NULL,
-    `tipo_entidad` ENUM('evento', 'tarea') NOT NULL,
+    `tipo_entidad` ENUM('evento', 'tarea', 'general') NOT NULL DEFAULT 'general',
     `entidad_id` INTEGER,
     `monto` DECIMAL(12,2) NOT NULL,
     `fecha` TIMESTAMP DEFAULT NOW(),

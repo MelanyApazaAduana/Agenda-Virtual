@@ -29,12 +29,28 @@ export const inicializarBaseDeDatos = async () => {
         // init.sql incluye CREATE DATABASE IF NOT EXISTS + USE + CREATE TABLE IF NOT EXISTS
         await conexion.query(sql);
 
+        // Migraciones idempotentes sobre BDs ya existentes (no afectan a BDs nuevas).
+        // Amplia el ENUM de gastos.tipo_entidad para permitir gastos generales.
+        await ejecutarMigracion(
+            conexion,
+            "ALTER TABLE gastos MODIFY COLUMN tipo_entidad ENUM('evento','tarea','general') NOT NULL DEFAULT 'general'"
+        );
+
         console.log('Base de datos verificada/creada correctamente (datos existentes conservados)');
     } catch (error) {
         console.error('Error al inicializar la base de datos:', error.message);
         throw error;
     } finally {
         await conexion.end();
+    }
+};
+
+// Ejecuta una sentencia de migración sin abortar el arranque si ya estaba aplicada.
+const ejecutarMigracion = async (conexion, sentencia) => {
+    try {
+        await conexion.query(sentencia);
+    } catch (error) {
+        console.warn('Migracion omitida:', error.message);
     }
 };
 

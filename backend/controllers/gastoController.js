@@ -84,14 +84,10 @@ export const crearGasto = async (req, res) => {
         const usuarioId = req.user.id;
         const { tipo_entidad, entidad_id, monto, fecha, categoria_id, metodo_pago } = req.body;
 
-        // Validaciones de entrada
-        if (!tipo_entidad) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'El tipo de entidad es obligatorio'
-            });
-        }
+        // tipo_entidad por defecto 'general' (gasto no asociado a evento/tarea)
+        const tipoEntidadFinal = tipo_entidad || 'general';
 
+        // Validaciones de entrada
         if (!monto || monto <= 0) {
             return res.status(400).json({
                 success: false,
@@ -100,7 +96,7 @@ export const crearGasto = async (req, res) => {
         }
 
         const nuevoGasto = await GastoModel.crear(usuarioId, {
-            tipo_entidad,
+            tipo_entidad: tipoEntidadFinal,
             entidad_id,
             monto,
             fecha,

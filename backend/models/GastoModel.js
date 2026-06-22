@@ -6,16 +6,16 @@ class GastoModel {
         const { tipo_entidad, entidad_id, monto, fecha, categoria_id, metodo_pago } = datos;
 
         // Validaciones básicas
-        if (!tipo_entidad || !['evento', 'tarea'].includes(tipo_entidad)) {
-            throw new Error('Tipo de entidad no válido. Debe ser: evento o tarea');
+        if (!tipo_entidad || !['evento', 'tarea', 'general'].includes(tipo_entidad)) {
+            throw new Error('Tipo de entidad no válido. Debe ser: evento, tarea o general');
         }
 
         if (!monto || monto <= 0) {
             throw new Error('El monto debe ser mayor a 0');
         }
 
-        // Validar que la entidad exista y pertenezca al usuario
-        if (entidad_id) {
+        // Validar que la entidad exista y pertenezca al usuario (solo si está asociada)
+        if (entidad_id && tipo_entidad !== 'general') {
             await this.validarEntidad(usuarioId, tipo_entidad, entidad_id);
         }
 
@@ -55,16 +55,16 @@ class GastoModel {
         let query;
         if (tipo_entidad === 'evento') {
             query = `
-                SELECT e.id 
+                SELECT e.id
                 FROM eventos e
-                INNER JOIN elementos el ON e.id = el.id
+                INNER JOIN elementos el ON e.elemento_id = el.id
                 WHERE e.id = ? AND el.usuario_id = ?
             `;
         } else if (tipo_entidad === 'tarea') {
             query = `
-                SELECT t.id 
+                SELECT t.id
                 FROM tareas t
-                INNER JOIN elementos el ON t.id = el.id
+                INNER JOIN elementos el ON t.elemento_id = el.id
                 WHERE t.id = ? AND el.usuario_id = ?
             `;
         }
@@ -83,8 +83,8 @@ class GastoModel {
                    c.nombre as categoria_nombre, 
                    c.color_hex as categoria_color,
                    CASE 
-                       WHEN g.tipo_entidad = 'evento' THEN (SELECT el.titulo FROM elementos el INNER JOIN eventos e ON el.id = e.id WHERE e.id = g.entidad_id)
-                       WHEN g.tipo_entidad = 'tarea' THEN (SELECT el.titulo FROM elementos el INNER JOIN tareas t ON el.id = t.id WHERE t.id = g.entidad_id)
+                       WHEN g.tipo_entidad = 'evento' THEN (SELECT el.titulo FROM elementos el INNER JOIN eventos e ON el.id = e.elemento_id WHERE e.id = g.entidad_id)
+                       WHEN g.tipo_entidad = 'tarea' THEN (SELECT el.titulo FROM elementos el INNER JOIN tareas t ON el.id = t.elemento_id WHERE t.id = g.entidad_id)
                    END as entidad_titulo
             FROM gastos g
             LEFT JOIN categorias c ON g.categoria_id = c.id
@@ -101,8 +101,8 @@ class GastoModel {
                    c.nombre as categoria_nombre, 
                    c.color_hex as categoria_color,
                    CASE 
-                       WHEN g.tipo_entidad = 'evento' THEN (SELECT el.titulo FROM elementos el INNER JOIN eventos e ON el.id = e.id WHERE e.id = g.entidad_id)
-                       WHEN g.tipo_entidad = 'tarea' THEN (SELECT el.titulo FROM elementos el INNER JOIN tareas t ON el.id = t.id WHERE t.id = g.entidad_id)
+                       WHEN g.tipo_entidad = 'evento' THEN (SELECT el.titulo FROM elementos el INNER JOIN eventos e ON el.id = e.elemento_id WHERE e.id = g.entidad_id)
+                       WHEN g.tipo_entidad = 'tarea' THEN (SELECT el.titulo FROM elementos el INNER JOIN tareas t ON el.id = t.elemento_id WHERE t.id = g.entidad_id)
                    END as entidad_titulo
             FROM gastos g
             LEFT JOIN categorias c ON g.categoria_id = c.id

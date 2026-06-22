@@ -53,16 +53,16 @@ class RecordatorioModel {
             // Eventos y tareas usan la tabla elementos
             if (tipo_entidad === 'evento') {
                 query = `
-                    SELECT e.id 
+                    SELECT e.id
                     FROM elementos e
-                    INNER JOIN eventos ev ON e.id = ev.id
+                    INNER JOIN eventos ev ON ev.elemento_id = e.id
                     WHERE e.id = ? AND e.usuario_id = ?
                 `;
             } else {
                 query = `
-                    SELECT e.id 
+                    SELECT e.id
                     FROM elementos e
-                    INNER JOIN tareas t ON e.id = t.id
+                    INNER JOIN tareas t ON t.elemento_id = e.id
                     WHERE e.id = ? AND e.usuario_id = ?
                 `;
             }
