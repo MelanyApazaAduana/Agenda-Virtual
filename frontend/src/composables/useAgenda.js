@@ -5,7 +5,19 @@ import { crearEvento, actualizarEvento, eliminarEvento } from '@/api/eventos.js'
 import { crearTarea, actualizarTarea, eliminarTarea } from '@/api/tareas.js'
 import { crearNota, actualizarNota, eliminarNota } from '@/api/notas.js'
 import { crearRecordatorio } from '@/api/recordatorios.js'
+import { crearRecurrencia } from '@/api/recurrencias.js'
 import { sincronizarEtiquetas } from '@/utils/etiquetasSync'
+
+// Crea la regla de recurrencia (si la hay) y devuelve su id, o null.
+const resolverRecurrenciaId = async (recurrencia) => {
+  if (!recurrencia) return null
+  try {
+    const { data } = await crearRecurrencia(recurrencia)
+    return data.data.id
+  } catch (e) {
+    return null
+  }
+}
 
 // Lógica compartida por las vistas de calendario (mes / semana / día):
 // carga de datos por rango, estado del modal y orquestación de
@@ -77,6 +89,7 @@ export function useAgenda() {
         if (payload.estado) cuerpo.estado = payload.estado
         await actualizarEvento(id, cuerpo)
       } else {
+        cuerpo.recurrencia_id = await resolverRecurrenciaId(payload.recurrencia)
         const { data } = await crearEvento(cuerpo)
         id = data.data.id
         await crearRecordatoriosEvento(id, payload.fecha_inicio, payload.recordatoriosMin)
@@ -100,6 +113,7 @@ export function useAgenda() {
         if (payload.estado) cuerpo.estado = payload.estado
         await actualizarTarea(id, cuerpo)
       } else {
+        cuerpo.recurrencia_id = await resolverRecurrenciaId(payload.recurrencia)
         const { data } = await crearTarea(cuerpo)
         id = data.data.id
       }

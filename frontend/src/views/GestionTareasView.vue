@@ -75,6 +75,7 @@ import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import ModalCrearTarea from '@/components/tareas/ModalCrearTarea.vue'
 import { listarTareas, crearTarea, actualizarTarea, eliminarTarea, cambiarEstadoTarea } from '@/api/tareas.js'
+import { crearRecurrencia } from '@/api/recurrencias.js'
 import { sincronizarEtiquetas } from '@/utils/etiquetasSync'
 
 const cargando = ref(true)
@@ -153,6 +154,9 @@ const guardarTarea = async (payload) => {
       if (payload.estado) cuerpo.estado = payload.estado
       await actualizarTarea(id, cuerpo)
     } else {
+      if (payload.recurrencia) {
+        try { const { data } = await crearRecurrencia(payload.recurrencia); cuerpo.recurrencia_id = data.data.id } catch (e) { /* ignora */ }
+      }
       const { data } = await crearTarea(cuerpo)
       id = data.data.id
     }

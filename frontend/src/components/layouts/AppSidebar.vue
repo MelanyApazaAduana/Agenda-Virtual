@@ -2,6 +2,21 @@
   <aside class="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0 h-full hidden md:flex">
     <div class="flex-1 overflow-y-auto px-3 py-3 space-y-4 custom-scroll">
 
+      <!-- Navegación principal -->
+      <nav class="space-y-3">
+        <div v-for="grupo in grupos" :key="grupo.titulo">
+          <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 px-1">{{ grupo.titulo }}</h3>
+          <div class="space-y-0.5">
+            <RouterLink v-for="item in grupo.items" :key="item.to" :to="item.to"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition"
+              :class="rutaActiva(item.to) ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: grupo.color }"></span>
+              {{ item.label }}
+            </RouterLink>
+          </div>
+        </div>
+      </nav>
+
       <!-- Mini calendario -->
       <div>
         <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 px-1">Mi Calendario</h3>
@@ -91,14 +106,48 @@
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
 import { useCalendarioStore } from '@/stores/calendarioStore'
 import { useEtiquetasStore } from '@/stores/etiquetasStore'
+import { useUsuarioStore } from '@/stores/usuarioStore'
 import { obtenerResumenGastos } from '@/api/gastos.js'
 import { obtenerPresupuestoVigente, crearPresupuesto } from '@/api/presupuestos.js'
 
+const route = useRoute()
 const calStore = useCalendarioStore()
 const { foco } = storeToRefs(calStore)
 const etiquetasStore = useEtiquetasStore()
+const usuarioStore = useUsuarioStore()
+
+const rutaActiva = (to) => route.path === to
+
+const grupos = computed(() => {
+  const base = [
+    { titulo: 'Agenda', color: '#3B82F6', items: [
+      { label: 'Calendario', to: '/calendario' },
+      { label: 'Tareas', to: '/tareas' },
+      { label: 'Notas', to: '/notas' }
+    ] },
+    { titulo: 'Organizar', color: '#8B5CF6', items: [
+      { label: 'Etiquetas', to: '/etiquetas' },
+      { label: 'Recordatorios', to: '/recordatorios' },
+      { label: 'Recurrencias', to: '/recurrencias' }
+    ] },
+    { titulo: 'Finanzas', color: '#10B981', items: [
+      { label: 'Ingresos', to: '/ingresos' },
+      { label: 'Gastos', to: '/gastos' },
+      { label: 'Presupuestos', to: '/presupuestos' },
+      { label: 'Reportes', to: '/reportes' }
+    ] },
+    { titulo: 'Más', color: '#6B7280', items: [
+      { label: 'Productividad', to: '/productividad' }
+    ] }
+  ]
+  if (usuarioStore.usuario?.rol === 'admin') {
+    base[3].items.push({ label: 'Usuarios', to: '/usuarios' })
+  }
+  return base
+})
 
 const etiquetasAbiertas = ref(true)
 const nuevaEtiqueta = ref('')

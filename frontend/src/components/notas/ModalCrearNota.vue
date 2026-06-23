@@ -12,42 +12,64 @@
           <h2 class="text-[18px] font-bold text-gray-900">{{ esEdicion ? 'Editar Nota' : 'Nueva Nota' }}</h2>
         </div>
         <button @click="$emit('cerrar')" class="text-gray-400 hover:text-gray-800 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
         </button>
       </div>
 
       <div class="p-6 space-y-5 overflow-y-auto">
         <div>
-          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Título de la nota</label>
-          <input v-model="formulario.titulo" type="text" placeholder="Ingresa un título descriptivo..."
-            class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none transition text-sm text-gray-800 placeholder-gray-300" />
+          <label class="label-campo">Título de la nota</label>
+          <input v-model="formulario.titulo" type="text" placeholder="Ingresa un título descriptivo..." class="input-base" />
         </div>
 
         <div>
-          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Color</label>
+          <label class="label-campo">Color</label>
           <SelectorColor v-model="formulario.color_hex" />
         </div>
 
         <div>
-          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Contenido</label>
-          <textarea v-model="formulario.contenido" rows="6" placeholder="Empieza a escribir tus ideas aquí..."
-            class="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none text-sm text-gray-800 placeholder-gray-300 resize-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition"></textarea>
+          <label class="label-campo">Contenido</label>
+          <textarea v-model="formulario.contenido" rows="5" placeholder="Empieza a escribir tus ideas aquí..." class="input-base resize-none"></textarea>
         </div>
+
+        <div>
+          <label class="label-campo">Vincular a</label>
+          <div class="flex bg-gray-100 p-1 rounded-lg mb-2">
+            <button v-for="t in tiposVinculo" :key="t.valor" type="button" @click="cambiarVinculo(t.valor)"
+              class="flex-1 py-1.5 text-sm font-medium rounded-md transition"
+              :class="vinculo === t.valor ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'">{{ t.label }}</button>
+          </div>
+          <select v-if="vinculo === 'evento'" v-model="formulario.evento_id" class="input-base appearance-none cursor-pointer">
+            <option :value="null" disabled>Selecciona un evento...</option>
+            <option v-for="e in eventos" :key="e.id" :value="e.id">{{ e.titulo }}</option>
+          </select>
+          <select v-if="vinculo === 'tarea'" v-model="formulario.tarea_id" class="input-base appearance-none cursor-pointer">
+            <option :value="null" disabled>Selecciona una tarea...</option>
+            <option v-for="t in tareas" :key="t.id" :value="t.id">{{ t.titulo }}</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label-campo">URL de imagen (opc.)</label>
+            <input v-model="formulario.imagen_url" type="url" placeholder="https://..." class="input-base" />
+          </div>
+          <div>
+            <label class="label-campo">URL de audio (opc.)</label>
+            <input v-model="formulario.audio_url" type="url" placeholder="https://..." class="input-base" />
+          </div>
+        </div>
+        <p class="text-[11px] text-gray-400 -mt-2">Pega una URL de imagen/audio (aún no hay subida de archivos).</p>
       </div>
 
       <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white shrink-0">
-        <button v-if="esEdicion" @click="$emit('eliminar', valores.id)"
-          class="text-sm font-bold text-red-600 hover:text-red-700 transition">
-          Eliminar
-        </button>
-        <div class="flex items-center gap-4 ml-auto">
+        <div class="flex items-center gap-3">
+          <button v-if="esEdicion" @click="$emit('eliminar', valores.id)" class="text-sm font-bold text-red-600 hover:text-red-700 transition">Eliminar</button>
+          <span v-if="autoguardado" class="text-[11px] text-gray-400">Autoguardado ✓</span>
+        </div>
+        <div class="flex items-center gap-4">
           <button @click="$emit('cerrar')" class="text-sm font-bold text-gray-600 hover:text-gray-900 transition">Cancelar</button>
-          <button @click="guardar"
-            class="px-6 py-2.5 text-sm font-bold text-white bg-black rounded-xl hover:bg-zinc-800 transition shadow-lg shadow-black/10">
-            {{ esEdicion ? 'Guardar cambios' : 'Guardar nota' }}
-          </button>
+          <button @click="guardar" class="btn-primario">{{ esEdicion ? 'Guardar cambios' : 'Guardar nota' }}</button>
         </div>
       </div>
     </div>
@@ -56,7 +78,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { watchDebounced } from '@vueuse/core'
 import SelectorColor from '@/components/ui/SelectorColor.vue'
+import { listarEventos } from '@/api/eventos'
+import { listarTareas } from '@/api/tareas'
+import { autoguardarNota } from '@/api/notas'
 
 const props = defineProps({
   modo: { type: String, default: 'crear' },
@@ -65,31 +91,70 @@ const props = defineProps({
 const emit = defineEmits(['cerrar', 'guardar', 'eliminar'])
 
 const esEdicion = computed(() => props.modo === 'editar' && props.valores)
+const tiposVinculo = [{ valor: 'ninguno', label: 'Ninguno' }, { valor: 'evento', label: 'Evento' }, { valor: 'tarea', label: 'Tarea' }]
+
+const vinculo = ref('ninguno')
+const eventos = ref([])
+const tareas = ref([])
+const autoguardado = ref(false)
 
 const formulario = ref({
   titulo: '',
   contenido: '',
-  color_hex: '#F59E0B'
+  color_hex: '#F59E0B',
+  evento_id: null,
+  tarea_id: null,
+  audio_url: '',
+  imagen_url: ''
 })
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    const [re, rt] = await Promise.all([listarEventos(), listarTareas()])
+    eventos.value = re.data.data || []
+    tareas.value = rt.data.data || []
+  } catch (e) { /* ignora */ }
+
   if (esEdicion.value) {
     const v = props.valores
-    formulario.value.titulo = v.titulo || ''
-    formulario.value.contenido = v.contenido || ''
-    formulario.value.color_hex = v.color_hex || '#F59E0B'
+    formulario.value = {
+      titulo: v.titulo || '',
+      contenido: v.contenido || '',
+      color_hex: v.color_hex || '#F59E0B',
+      evento_id: v.evento_id || null,
+      tarea_id: v.tarea_id || null,
+      audio_url: v.audio_url || '',
+      imagen_url: v.imagen_url || ''
+    }
+    vinculo.value = v.evento_id ? 'evento' : v.tarea_id ? 'tarea' : 'ninguno'
+
+    // Autoguardado en edición: actualiza el borrador al vuelo
+    watchDebounced(formulario, async () => {
+      if (!formulario.value.titulo.trim()) return
+      try { await autoguardarNota({ id: v.id, ...construirPayload() }); autoguardado.value = true; setTimeout(() => (autoguardado.value = false), 1500) }
+      catch (e) { /* ignora */ }
+    }, { debounce: 900, deep: true })
   }
+})
+
+const cambiarVinculo = (t) => {
+  vinculo.value = t
+  if (t !== 'evento') formulario.value.evento_id = null
+  if (t !== 'tarea') formulario.value.tarea_id = null
+}
+
+const construirPayload = () => ({
+  titulo: formulario.value.titulo.trim(),
+  contenido: formulario.value.contenido || null,
+  color_hex: formulario.value.color_hex,
+  evento_id: vinculo.value === 'evento' ? formulario.value.evento_id : null,
+  tarea_id: vinculo.value === 'tarea' ? formulario.value.tarea_id : null,
+  audio_url: formulario.value.audio_url || null,
+  imagen_url: formulario.value.imagen_url || null
 })
 
 const guardar = () => {
-  if (!formulario.value.titulo.trim()) {
-    alert('El título de la nota es obligatorio')
-    return
-  }
-  emit('guardar', {
-    titulo: formulario.value.titulo.trim(),
-    contenido: formulario.value.contenido || null,
-    color_hex: formulario.value.color_hex
-  })
+  if (!formulario.value.titulo.trim()) { alert('El título de la nota es obligatorio'); return }
+  emit('guardar', construirPayload())
 }
 </script>

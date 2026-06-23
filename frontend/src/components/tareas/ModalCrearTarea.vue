@@ -65,6 +65,8 @@
           <textarea v-model="formulario.descripcion" rows="2" placeholder="Añade detalles sobre la tarea..."
             class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black focus:border-black outline-none transition text-sm text-gray-800 placeholder-gray-400 resize-none"></textarea>
         </div>
+
+        <SelectorRecurrencia v-if="!esEdicion" v-model="formulario.recurrencia" :fecha-base="fechaPredeterminada" />
       </div>
 
       <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center gap-4 shrink-0 bg-white">
@@ -89,6 +91,7 @@ import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import SelectorColor from '@/components/ui/SelectorColor.vue'
 import EtiquetasSelector from '@/components/ui/EtiquetasSelector.vue'
+import SelectorRecurrencia from '@/components/recurrencias/SelectorRecurrencia.vue'
 import { obtenerIdsEtiquetas } from '@/utils/etiquetasSync'
 
 const props = defineProps({
@@ -116,7 +119,8 @@ const formulario = ref({
   estado: 'por_hacer',
   color_hex: '#10B981',
   etiquetas: [],
-  descripcion: ''
+  descripcion: '',
+  recurrencia: null
 })
 
 const etiquetasPrevias = ref([])
@@ -148,7 +152,8 @@ const guardar = () => {
     estado: esEdicion.value ? formulario.value.estado : undefined,
     color_hex: formulario.value.color_hex,
     etiquetas: formulario.value.etiquetas,
-    etiquetasPrevias: etiquetasPrevias.value
+    etiquetasPrevias: etiquetasPrevias.value,
+    recurrencia: formulario.value.recurrencia
   })
 }
 </script>

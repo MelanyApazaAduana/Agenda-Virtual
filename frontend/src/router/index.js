@@ -13,6 +13,11 @@ const RegistrarGastoView = () => import('@/views/RegistrarGastoView.vue')
 const GestionGastosView = () => import('@/views/GestionGastosView.vue')
 const CalendarioSemView = () => import('@/views/CalendarioSemanal.vue')
 const CalendarioDiaView = () => import('@/views/CalendarioDiario.vue')
+const EtiquetasView = () => import('@/views/EtiquetasView.vue')
+const RecordatoriosView = () => import('@/views/RecordatoriosView.vue')
+const RecurrenciasView = () => import('@/views/RecurrenciasView.vue')
+const IngresosView = () => import('@/views/IngresosView.vue')
+const PresupuestosView = () => import('@/views/PresupuestosView.vue')
 
 const routes = [
   {
@@ -65,12 +70,48 @@ const routes = [
     path: '/usuarios',
     name: 'usuarios',
     component: GestionUsuariosView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true, rol: 'admin' }
+  },
+  {
+    path: '/etiquetas',
+    name: 'etiquetas',
+    component: EtiquetasView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/recordatorios',
+    name: 'recordatorios',
+    component: RecordatoriosView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/recurrencias',
+    name: 'recurrencias',
+    component: RecurrenciasView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/ingresos',
+    name: 'ingresos',
+    component: IngresosView,
     meta: { layout: 'DashboardLayout', requiereAuth: true }
   },
   {
     path: '/ingresos/registrar',
     name: 'registrar-ingreso',
     component: RegistrarIngresoView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/presupuestos',
+    name: 'presupuestos',
+    component: PresupuestosView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/reportes',
+    name: 'reportes',
+    component: ReportesFinancierosView,
     meta: { layout: 'DashboardLayout', requiereAuth: true }
   },
   {
@@ -111,6 +152,9 @@ router.beforeEach(async (to, from, next) => {
     next('/login')
   } else if (to.path === '/login' && store.autenticado) {
     next('/')
+  } else if (to.meta.rol && store.usuario?.rol !== to.meta.rol) {
+    // Ruta restringida por rol (ej. /usuarios solo para admin)
+    next('/calendario')
   } else {
     next()
   }

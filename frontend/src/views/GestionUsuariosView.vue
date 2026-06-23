@@ -9,7 +9,12 @@
   </header>
 
   <div class="flex-1 overflow-y-auto p-8">
-    
+
+    <div class="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3 flex items-center gap-2 mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+      <span><strong>Pendiente de API.</strong> Datos de ejemplo: el backend aún no expone un CRUD de usuarios (solo autenticación).</span>
+    </div>
+
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
       <div>
         <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Administración de Usuarios</h2>

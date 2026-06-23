@@ -9,4 +9,20 @@
   .event-badge {
     @apply text-xs rounded px-2 py-1 mb-1 truncate cursor-pointer hover:opacity-80;
   }
+  /* Utilidades compartidas del sistema de diseño */
+  .input-base {
+    @apply w-full bg-gray-50/50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-black focus:bg-white transition;
+  }
+  .label-campo {
+    @apply block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-1.5;
+  }
+  .btn-primario {
+    @apply bg-black hover:bg-zinc-800 text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full;
+  }
+  .card {
+    @apply bg-white border border-gray-200 rounded-2xl shadow-sm;
+  }
 }

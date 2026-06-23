@@ -38,12 +38,26 @@ class EntidadEtiquetaModel {
         return rows;
     }
 
-    // Listar las entidades (tipo + id) vinculadas a una etiqueta del usuario
+    // Listar las entidades vinculadas a una etiqueta del usuario, con una
+    // etiqueta descriptiva (titulo del evento/tarea, fuente del ingreso, etc.)
+    // para que el frontend pueda mostrarlas sin pedir cada una por separado.
     static async listarEntidadesPorEtiqueta(usuarioId, etiquetaId) {
         const sql = `
-            SELECT ee.entidad_tipo, ee.entidad_id, ee.creado_en
+            SELECT ee.entidad_tipo,
+                   ee.entidad_id,
+                   ee.creado_en,
+                   CASE ee.entidad_tipo
+                       WHEN 'evento' THEN ev.titulo
+                       WHEN 'tarea'  THEN ta.titulo
+                       WHEN 'ingreso' THEN COALESCE(ing.fuente, CONCAT('Ingreso Bs. ', ing.monto))
+                       WHEN 'gasto'  THEN CONCAT('Gasto Bs. ', ga.monto)
+                   END AS descripcion
             FROM entidad_etiquetas ee
             INNER JOIN etiquetas e ON ee.etiqueta_id = e.id
+            LEFT JOIN eventos ev  ON ee.entidad_tipo = 'evento'  AND ee.entidad_id = ev.id
+            LEFT JOIN tareas ta   ON ee.entidad_tipo = 'tarea'   AND ee.entidad_id = ta.id
+            LEFT JOIN ingresos ing ON ee.entidad_tipo = 'ingreso' AND ee.entidad_id = ing.id
+            LEFT JOIN gastos ga   ON ee.entidad_tipo = 'gasto'   AND ee.entidad_id = ga.id
             WHERE ee.etiqueta_id = ? AND e.usuario_id = ?
             ORDER BY ee.entidad_tipo, ee.entidad_id
         `;

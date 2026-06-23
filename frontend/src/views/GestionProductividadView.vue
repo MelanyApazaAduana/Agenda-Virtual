@@ -4,7 +4,12 @@
   </header>
 
   <div class="flex-1 overflow-y-auto p-8 space-y-6">
-    
+
+    <div class="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+      <span><strong>Pendiente de API.</strong> Estos datos son de ejemplo: el backend aún no expone endpoints de productividad.</span>
+    </div>
+
     <div class="bg-gradient-to-r from-slate-900 to-black rounded-2xl p-5 shadow-lg flex items-center justify-between">
       <div class="flex items-center gap-4">
         <div class="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center relative">

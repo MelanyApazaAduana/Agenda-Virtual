@@ -80,6 +80,8 @@
             </label>
           </div>
         </div>
+
+        <SelectorRecurrencia v-if="!esEdicion" v-model="formulario.recurrencia" :fecha-base="fechaBase" />
       </div>
 
       <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center gap-4 shrink-0 bg-white">
@@ -104,6 +106,7 @@ import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import SelectorColor from '@/components/ui/SelectorColor.vue'
 import EtiquetasSelector from '@/components/ui/EtiquetasSelector.vue'
+import SelectorRecurrencia from '@/components/recurrencias/SelectorRecurrencia.vue'
 import { obtenerIdsEtiquetas } from '@/utils/etiquetasSync'
 
 const props = defineProps({
@@ -127,7 +130,8 @@ const formulario = ref({
   estado: '',
   etiquetas: [],
   rec15: false,
-  rec60: false
+  rec60: false,
+  recurrencia: null
 })
 
 const etiquetasPrevias = ref([])
@@ -174,7 +178,8 @@ const guardar = () => {
     estado: formulario.value.estado || undefined,
     etiquetas: formulario.value.etiquetas,
     etiquetasPrevias: etiquetasPrevias.value,
-    recordatoriosMin
+    recordatoriosMin,
+    recurrencia: formulario.value.recurrencia
   })
 }
 </script>
