@@ -5,7 +5,7 @@ export const verificarSesion = () => api.get('/auth/verificar')
 export const cerrarSesion = () => api.get('/auth/logout')
 
 export const iniciarSesionGoogle = () => {
-  window.location.href = 'http://localhost:3000/auth/google'
+  window.location.href = '/auth/google'
 }
 
 export const login = (correo, contrasena) =>

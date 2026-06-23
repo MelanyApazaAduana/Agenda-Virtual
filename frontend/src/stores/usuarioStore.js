@@ -31,7 +31,7 @@ export const useUsuarioStore = defineStore('usuario', {
     cerrarSesion() {
       this.usuario = null
       this.autenticado = false
-      window.location.href = 'http://localhost:3000/auth/logout'
+      window.location.href = '/auth/logout'
     },
 
     establecerUsuario(datos) {

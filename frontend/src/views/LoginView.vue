@@ -210,6 +210,6 @@ const manejarFormulario = async () => {
 }
 
 const iniciarSesionGoogle = () => {
-  window.location.href = 'http://localhost:3000/auth/google'
+  window.location.href = '/auth/google'
 }
 </script>
