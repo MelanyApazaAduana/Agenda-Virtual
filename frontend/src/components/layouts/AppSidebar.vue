@@ -8,28 +8,6 @@
 
     <div class="flex-1 overflow-y-auto px-3 py-3 space-y-4 custom-scroll">
 
-      <!-- Navegación principal (grupos desplegables) -->
-      <nav class="space-y-2">
-        <div v-for="grupo in grupos" :key="grupo.titulo">
-          <button @click="alternarGrupo(grupo.titulo)"
-            class="w-full flex items-center justify-between px-1 mb-1 group">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ grupo.titulo }}</span>
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
-              class="w-3 h-3 text-gray-400 transition-transform" :class="gruposAbiertos[grupo.titulo] ? '' : '-rotate-90'">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div v-show="gruposAbiertos[grupo.titulo]" class="space-y-0.5">
-            <RouterLink v-for="item in grupo.items" :key="item.to" :to="item.to"
-              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition"
-              :class="rutaActiva(item.to) ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'">
-              <span class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: grupo.color }"></span>
-              {{ item.label }}
-            </RouterLink>
-          </div>
-        </div>
-      </nav>
-
       <!-- Mini calendario -->
       <div>
         <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 px-1">Mi Calendario</h3>
@@ -54,6 +32,28 @@
           </template>
         </div>
       </div>
+
+      <!-- Navegación principal (grupos desplegables) -->
+      <nav class="space-y-2">
+        <div v-for="grupo in grupos" :key="grupo.titulo">
+          <button @click="alternarGrupo(grupo.titulo)"
+            class="w-full flex items-center justify-between px-1 mb-1 group">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ grupo.titulo }}</span>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+              class="w-3 h-3 text-gray-400 transition-transform" :class="gruposAbiertos[grupo.titulo] ? '' : '-rotate-90'">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div v-show="gruposAbiertos[grupo.titulo]" class="space-y-0.5">
+            <RouterLink v-for="item in grupo.items" :key="item.to" :to="item.to"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition"
+              :class="rutaActiva(item.to) ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'">
+              <span v-html="item.icono" class="w-4 h-4 shrink-0"></span>
+              {{ item.label }}
+            </RouterLink>
+          </div>
+        </div>
+      </nav>
 
       <!-- Etiquetas -->
       <div>
@@ -140,27 +140,27 @@ const alternarGrupo = (titulo) => { gruposAbiertos.value[titulo] = !gruposAbiert
 const grupos = computed(() => {
   const base = [
     { titulo: 'Agenda', color: '#3B82F6', items: [
-      { label: 'Calendario', to: '/calendario' },
-      { label: 'Tareas', to: '/tareas' },
-      { label: 'Notas', to: '/notas' }
+      { label: 'Eventos', to: '/calendario', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.25 2A2.25 2.25 0 0 0 3 4.25v2.5h14v-2.5A2.25 2.25 0 0 0 14.75 2h-9.5Z" /><path d="M3 8.25v7.5A2.25 2.25 0 0 0 5.25 18h9.5A2.25 2.25 0 0 0 17 15.75v-7.5H3Zm3.5 3.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm2.5-1a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm3.5 1a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" /></svg>' },
+      { label: 'Tareas', to: '/tareas', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 0 0-6 6v3.586l-.707.707A1 1 0 0 0 4 14h12a1 1 0 0 0 .707-1.707L16 11.586V8a6 6 0 0 0-6-6Z" /><path d="M10 18a3 3 0 0 1-3-3h6a3 3 0 0 1-3 3Z" /></svg>' },
+      { label: 'Notas', to: '/notas', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3.5A1.5 1.5 0 0 1 4.5 2h6.879a1.5 1.5 0 0 1 1.06.44l4.122 4.12A1.5 1.5 0 0 1 17 7.622V16.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 16.5v-13Z" /><path d="M6 9.75a.75.75 0 0 1 .75-.75h6.5a.75.75 0 0 1 0 1.5h-6.5A.75.75 0 0 1 6 9.75Zm0 3a.75.75 0 0 1 .75-.75h6.5a.75.75 0 0 1 0 1.5h-6.5A.75.75 0 0 1 6 12.75Z" /></svg>' }
     ] },
     { titulo: 'Organizar', color: '#8B5CF6', items: [
-      { label: 'Etiquetas', to: '/etiquetas' },
-      { label: 'Recordatorios', to: '/recordatorios' },
-      { label: 'Recurrencias', to: '/recurrencias' }
+      { label: 'Etiquetas', to: '/etiquetas', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M4.5 2A2.5 2.5 0 0 0 2 4.5v3.879a2.5 2.5 0 0 0 .732 1.767l7.5 7.5a2.5 2.5 0 0 0 3.536 0l3.878-3.878a2.5 2.5 0 0 0 0-3.536l-7.5-7.5A2.5 2.5 0 0 0 8.38 2H4.5ZM5 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" /></svg>' },
+      { label: 'Recordatorios', to: '/recordatorios', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 0 0-6 6v3.586l-.707.707A1 1 0 0 0 4 14h12a1 1 0 0 0 .707-1.707L16 11.586V8a6 6 0 0 0-6-6Z" /><path d="M10 18a3 3 0 0 1-3-3h6a3 3 0 0 1-3 3Z" /></svg>' },
+      { label: 'Recurrencias', to: '/recurrencias', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.388A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clip-rule="evenodd" /></svg>' }
     ] },
     { titulo: 'Finanzas', color: '#10B981', items: [
-      { label: 'Ingresos', to: '/ingresos' },
-      { label: 'Gastos', to: '/gastos' },
-      { label: 'Presupuestos', to: '/presupuestos' },
-      { label: 'Reportes', to: '/reportes' }
+      { label: 'Ingresos', to: '/ingresos', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm-.75-11.25a.75.75 0 0 1 1.5 0v.284c.582.063 1.11.315 1.48.69a.75.75 0 0 1-1.06 1.06c-.156-.156-.436-.25-.82-.276h-.018c-.331-.024-.767.163-1.014.458a.926.926 0 0 0 .146 1.262c.298.256.71.43 1.18.552.56.147 1.298.42 1.834.924.33.31.554.706.603 1.144.052.47-.082.931-.391 1.287a1.8 1.8 0 0 1-.754.524c.006.093.01.187.01.281a.75.75 0 0 1-1.5 0v-.006a3.023 3.023 0 0 1-.028-.058 2.954 2.954 0 0 1-.166-.377.75.75 0 0 1 1.39-.565c.052.131.114.244.174.33.039.054.073.095.096.119.038.04.055.053.068.06h.001c.015.01.037.02.076.03l.002.002a.75.75 0 0 1 .202-.096c.185-.075.424-.195.521-.364a.426.426 0 0 0 .09-.265c0-.085-.026-.19-.123-.3-.152-.176-.426-.313-.813-.425-.503-.147-1.487-.485-2.11-1.058a2.426 2.426 0 0 1-.497-2.763c.19-.398.496-.74.86-.98v-.221Z" clip-rule="evenodd" /></svg>' },
+      { label: 'Gastos', to: '/gastos', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v.284c-.582.063-1.11.315-1.48.69a.75.75 0 0 0 1.06 1.06c.156-.156.436-.25.82-.276h.018c.331-.024.767.163 1.014.458.247.296.28.643.146 1.262-.133.62-.545 1.006-1.18 1.552-.56.147-1.298.42-1.834.924a1.926 1.926 0 0 0-.603 1.144c-.052.47.082.931.391 1.287.207.24.467.415.754.524a6.32 6.32 0 0 1-.01.281.75.75 0 0 0 1.5 0v-.006c.01-.019.02-.038.028-.058.036-.09.084-.214.166-.377a.75.75 0 0 0-1.39-.565c-.052.131-.114.244-.174.33-.039.054-.073.095-.096.119-.038.04-.055.053-.068.06h-.002c-.014.01-.037.02-.076.03a.75.75 0 0 0-.202-.096c-.185-.075-.424-.195-.521-.364a.426.426 0 0 1-.09-.265c0-.085.026-.19.123-.3.152-.176.426-.313.813-.425.503-.147 1.487-.485 2.11-1.058a2.426 2.426 0 0 0 .497-2.763c-.19-.398-.496-.74-.86-.98v-.221Z" clip-rule="evenodd" /></svg>' },
+      { label: 'Presupuestos', to: '/presupuestos', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M1 4.5A1.5 1.5 0 0 1 2.5 3h15A1.5 1.5 0 0 1 19 4.5v.75a.75.75 0 0 1-.75.75H1.75A.75.75 0 0 1 1 5.25V4.5Z" /><path d="M1 10a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 10Z" /><path d="M1 14.5a1.5 1.5 0 0 1 1.5-1.5h15a1.5 1.5 0 0 1 1.5 1.5v.5a.75.75 0 0 1-.75.75H1.75a.75.75 0 0 1-.75-.75v-.5Z" /></svg>' },
+      { label: 'Reportes', to: '/reportes', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M15.5 2A1.5 1.5 0 0 0 14 3.5v13a1.5 1.5 0 0 0 1.5 1.5h1a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 16.5 2h-1ZM9.5 6A1.5 1.5 0 0 0 8 7.5v9A1.5 1.5 0 0 0 9.5 18h1a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 10.5 6h-1ZM3.5 10A1.5 1.5 0 0 0 2 11.5v5A1.5 1.5 0 0 0 3.5 18h1A1.5 1.5 0 0 0 6 16.5v-5A1.5 1.5 0 0 0 4.5 10h-1Z" /></svg>' }
     ] },
     { titulo: 'Más', color: '#6B7280', items: [
-      { label: 'Productividad', to: '/productividad' }
+      { label: 'Productividad', to: '/productividad', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 1ZM5.05 3.05a.75.75 0 0 1 1.06 0l1.062 1.06A.75.75 0 0 1 6.11 5.173L5.05 4.11a.75.75 0 0 1 0-1.06Zm9.9 0a.75.75 0 0 1 0 1.06l-1.06 1.062a.75.75 0 0 1-1.062-1.061l1.061-1.06a.75.75 0 0 1 1.06 0ZM3 8a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 3 8Zm14 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 17 8Zm-7 3a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm-3.95 2.95a.75.75 0 0 1 1.06 0L8.17 14.06a.75.75 0 0 1-1.061 1.062l-1.06-1.061a.75.75 0 0 1 0-1.06Zm7.9 0a.75.75 0 0 1 0 1.06l-1.06 1.062a.75.75 0 0 1-1.062-1.061L13.94 14.95a.75.75 0 0 1 1.06 0ZM10 17a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" /></svg>' }
     ] }
   ]
   if (usuarioStore.usuario?.rol === 'admin') {
-    base[3].items.push({ label: 'Usuarios', to: '/usuarios' })
+    base[3].items.push({ label: 'Usuarios', to: '/usuarios', icono: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM18 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM10.5 11c-1.508 0-3.086.363-4.088 1.144A3.267 3.267 0 0 0 5 14.5V16h10v-1.5c0-1.39-.561-2.646-1.412-3.356C13.086 11.363 11.508 11 10.5 11ZM4 11.5c.446 0 .876.055 1.288.16A4.22 4.22 0 0 0 4 14.5v1.5H2.5A1.5 1.5 0 0 1 1 14.5v-.5a2.5 2.5 0 0 1 2.5-2.5h.5ZM17.712 11.66c.412-.105.842-.16 1.288-.16h.5A2.5 2.5 0 0 1 22 14v.5a1.5 1.5 0 0 1-1.5 1.5H19v-1.5c0-.96-.36-1.837-.956-2.508a4.15 4.15 0 0 0-.332-.332Z" /></svg>' })
   }
   return base
 })

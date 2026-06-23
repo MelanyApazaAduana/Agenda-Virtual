@@ -1,7 +1,7 @@
 <template>
   <RouterLink to="/calendario" class="flex items-center gap-2 font-bold text-lg tracking-wide text-gray-900 shrink-0 hover:opacity-80 transition">
     <img src="/logo.svg" alt="" class="w-6 h-6 rounded-md" />
-    Agenda Virtual
+    GESTION DE TAREAS Y FINANZAS
   </RouterLink>
 
   <div class="flex-1 flex items-center justify-center gap-4 text-lg font-bold text-gray-800">
