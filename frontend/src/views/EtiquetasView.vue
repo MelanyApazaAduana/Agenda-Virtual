@@ -67,6 +67,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, computed, onMounted } from 'vue'
 import { useEtiquetasStore } from '@/stores/etiquetasStore'
 import { listarEntidadesPorEtiqueta } from '@/api/etiquetas'
@@ -101,17 +103,17 @@ const crear = async () => {
     await etiquetasStore.crear({ nombre, color_hex: colorNueva.value })
     nuevaEtiqueta.value = ''
   } catch (e) {
-    alert(e.response?.data?.message || 'No se pudo crear la etiqueta')
+    ui.error(e.response?.data?.message || 'No se pudo crear la etiqueta')
   }
 }
 
 const borrar = async (et) => {
-  if (!confirm(`¿Eliminar la etiqueta "${et.nombre}"?`)) return
+  if (!(await ui.confirmar(`¿Eliminar la etiqueta "${et.nombre}"?`))) return
   try {
     await etiquetasStore.eliminar(et.id)
     if (seleccionada.value?.id === et.id) { seleccionada.value = null; entidades.value = [] }
   } catch (e) {
-    alert('No se pudo eliminar la etiqueta')
+    ui.error('No se pudo eliminar la etiqueta')
   }
 }
 

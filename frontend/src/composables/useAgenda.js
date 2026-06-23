@@ -7,6 +7,7 @@ import { crearNota, actualizarNota, eliminarNota } from '@/api/notas.js'
 import { crearRecordatorio } from '@/api/recordatorios.js'
 import { crearRecurrencia } from '@/api/recurrencias.js'
 import { sincronizarEtiquetas } from '@/utils/etiquetasSync'
+import { useUiStore } from '@/stores/uiStore'
 
 // Crea la regla de recurrencia (si la hay) y devuelve su id, o null.
 const resolverRecurrenciaId = async (recurrencia) => {
@@ -23,6 +24,7 @@ const resolverRecurrenciaId = async (recurrencia) => {
 // carga de datos por rango, estado del modal y orquestación de
 // crear / editar / eliminar incluyendo etiquetas y recordatorios.
 export function useAgenda() {
+  const ui = useUiStore()
   const eventos = ref([])
   const tareas = ref([])
   const notas = ref([])
@@ -97,7 +99,7 @@ export function useAgenda() {
       await sincronizarEtiquetas('evento', id, payload.etiquetas, payload.etiquetasPrevias)
       cerrarModal(); await recargar()
     } catch (error) {
-      alert(error.response?.data?.message || 'Error al guardar el evento')
+      ui.error(error.response?.data?.message || 'Error al guardar el evento')
     }
   }
 
@@ -120,7 +122,7 @@ export function useAgenda() {
       await sincronizarEtiquetas('tarea', id, payload.etiquetas, payload.etiquetasPrevias)
       cerrarModal(); await recargar()
     } catch (error) {
-      alert(error.response?.data?.message || 'Error al guardar la tarea')
+      ui.error(error.response?.data?.message || 'Error al guardar la tarea')
     }
   }
 
@@ -133,24 +135,24 @@ export function useAgenda() {
       }
       cerrarModal(); await recargar()
     } catch (error) {
-      alert(error.response?.data?.message || 'Error al guardar la nota')
+      ui.error(error.response?.data?.message || 'Error al guardar la nota')
     }
   }
 
   const eliminarEventoItem = async (id) => {
-    if (!confirm('¿Eliminar este evento?')) return
+    if (!(await ui.confirmar('¿Eliminar este evento?'))) return
     try { await eliminarEvento(id); cerrarModal(); await recargar() }
-    catch (e) { alert('No se pudo eliminar el evento') }
+    catch (e) { ui.error('No se pudo eliminar el evento') }
   }
   const eliminarTareaItem = async (id) => {
-    if (!confirm('¿Eliminar esta tarea?')) return
+    if (!(await ui.confirmar('¿Eliminar esta tarea?'))) return
     try { await eliminarTarea(id); cerrarModal(); await recargar() }
-    catch (e) { alert('No se pudo eliminar la tarea') }
+    catch (e) { ui.error('No se pudo eliminar la tarea') }
   }
   const eliminarNotaItem = async (id) => {
-    if (!confirm('¿Eliminar esta nota?')) return
+    if (!(await ui.confirmar('¿Eliminar esta nota?'))) return
     try { await eliminarNota(id); cerrarModal(); await recargar() }
-    catch (e) { alert('No se pudo eliminar la nota') }
+    catch (e) { ui.error('No se pudo eliminar la nota') }
   }
 
   return {

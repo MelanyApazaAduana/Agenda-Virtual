@@ -56,6 +56,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import Spinner from '@/components/ui/Spinner.vue'
@@ -93,15 +95,15 @@ const guardar = async (payload) => {
     if (modal.value.modo === 'editar') await actualizarGasto(modal.value.valores.id, payload)
     else await crearGasto(payload)
     cerrar(); await cargar()
-  } catch (e) { alert(e.response?.data?.mensaje || 'No se pudo guardar el gasto') }
+  } catch (e) { ui.error(e.response?.data?.mensaje || 'No se pudo guardar el gasto') }
 }
 
 const eliminarItem = async (id) => {
-  if (!confirm('¿Eliminar este gasto?')) return
-  try { await eliminarGasto(id); cerrar(); await cargar() } catch (e) { alert('Error') }
+  if (!(await ui.confirmar('¿Eliminar este gasto?'))) return
+  try { await eliminarGasto(id); cerrar(); await cargar() } catch (e) { ui.error('Error') }
 }
 const borrar = async (g) => {
-  if (!confirm('¿Eliminar este gasto?')) return
-  try { await eliminarGasto(g.id); await cargar() } catch (e) { alert('Error') }
+  if (!(await ui.confirmar('¿Eliminar este gasto?'))) return
+  try { await eliminarGasto(g.id); await cargar() } catch (e) { ui.error('Error') }
 }
 </script>

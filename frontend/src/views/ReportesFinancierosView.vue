@@ -88,7 +88,7 @@ import GraficoDonut from '@/components/ui/GraficoDonut.vue'
 import BarraProgreso from '@/components/ui/BarraProgreso.vue'
 import { obtenerResumenIngresos } from '@/api/ingresos.js'
 import { obtenerResumenGastos } from '@/api/gastos.js'
-import { obtenerPresupuestoVigente } from '@/api/presupuestos.js'
+import { obtenerMiPresupuesto } from '@/api/presupuestos.js'
 
 const cargando = ref(true)
 const totalIngresos = ref(0)
@@ -148,7 +148,7 @@ const cargar = async () => {
   } catch (e) { totalGastos.value = 0; cantidadGastos.value = 0; porMetodo.value = [] }
 
   try {
-    const { data } = await obtenerPresupuestoVigente(fin)
+    const { data } = await obtenerMiPresupuesto()
     presupuesto.value = data.data || null
   } catch (e) { presupuesto.value = null }
 

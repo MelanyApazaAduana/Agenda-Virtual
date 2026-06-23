@@ -74,20 +74,19 @@
       <div>
         <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">Finanzas</h3>
         <div class="space-y-2.5">
-          <div class="bg-gray-50 rounded-xl px-3 py-2.5">
+          <router-link to="/presupuestos" class="block bg-gray-50 rounded-xl px-3 py-2.5 hover:bg-gray-100 transition">
             <div class="flex justify-between items-center mb-1">
               <span class="text-[10px] font-medium text-gray-500">Presupuesto</span>
-              <span class="text-xs font-bold text-gray-900">{{ presupuesto ? 'Bs. ' + formato(presupuesto.monto_total) : '—' }}</span>
+              <span class="text-xs font-bold text-gray-900">{{ finanzas.presupuesto ? 'Bs. ' + formato(finanzas.presupuesto.monto_total) : '—' }}</span>
             </div>
             <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
               <div class="h-full rounded-full" :class="usoPresupuesto > 100 ? 'bg-red-500' : 'bg-emerald-500'" :style="{ width: Math.min(usoPresupuesto, 100) + '%' }"></div>
             </div>
-            <button @click="definirPresupuesto" class="text-[10px] text-gray-400 hover:text-black mt-1.5">Definir presupuesto</button>
-          </div>
+          </router-link>
           <div class="bg-red-50 rounded-xl px-3 py-2.5">
             <div class="flex justify-between items-center">
               <span class="text-[10px] font-medium text-gray-500">Gastos del mes</span>
-              <span class="text-xs font-bold text-gray-900">Bs. {{ formato(gastosMes) }}</span>
+              <span class="text-xs font-bold text-gray-900">Bs. {{ formato(finanzas.gastadoMes) }}</span>
             </div>
           </div>
         </div>
@@ -95,8 +94,7 @@
           <router-link to="/ingresos/registrar" class="flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-semibold bg-green-50 text-green-700 hover:bg-green-100 transition">+ Ingreso</router-link>
           <router-link to="/gastos/registrar" class="flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-semibold bg-red-50 text-red-700 hover:bg-red-100 transition">+ Gasto</router-link>
         </div>
-        <router-link to="/gastos" class="flex items-center justify-center gap-1.5 py-2 mt-2 rounded-xl text-[11px] font-semibold bg-gray-50 text-gray-600 hover:bg-gray-100 transition">Ver gastos</router-link>
-        <router-link to="/ingresos/reportes" class="flex items-center justify-center gap-1.5 py-2 mt-2 rounded-xl text-[11px] font-semibold bg-gray-50 text-gray-600 hover:bg-gray-100 transition">Reportes</router-link>
+        <router-link to="/reportes" class="flex items-center justify-center gap-1.5 py-2 mt-2 rounded-xl text-[11px] font-semibold bg-gray-50 text-gray-600 hover:bg-gray-100 transition">Reportes</router-link>
       </div>
     </div>
   </aside>
@@ -110,14 +108,16 @@ import { useRoute } from 'vue-router'
 import { useCalendarioStore } from '@/stores/calendarioStore'
 import { useEtiquetasStore } from '@/stores/etiquetasStore'
 import { useUsuarioStore } from '@/stores/usuarioStore'
-import { obtenerResumenGastos } from '@/api/gastos.js'
-import { obtenerPresupuestoVigente, crearPresupuesto } from '@/api/presupuestos.js'
+import { useFinanzasStore } from '@/stores/finanzasStore'
+import { useUiStore } from '@/stores/uiStore'
 
 const route = useRoute()
 const calStore = useCalendarioStore()
 const { foco } = storeToRefs(calStore)
 const etiquetasStore = useEtiquetasStore()
 const usuarioStore = useUsuarioStore()
+const finanzas = useFinanzasStore()
+const ui = useUiStore()
 
 const rutaActiva = (to) => route.path === to
 
@@ -153,9 +153,6 @@ const etiquetasAbiertas = ref(true)
 const nuevaEtiqueta = ref('')
 const miniFecha = ref(dayjs())
 
-const presupuesto = ref(null)
-const gastosMes = ref(0)
-
 const mesLabel = computed(() => miniFecha.value.format('MMMM YYYY'))
 
 const diasMini = computed(() => {
@@ -180,8 +177,8 @@ const diasMini = computed(() => {
 })
 
 const usoPresupuesto = computed(() => {
-  if (!presupuesto.value || !Number(presupuesto.value.monto_total)) return 0
-  return Math.round((gastosMes.value / Number(presupuesto.value.monto_total)) * 100)
+  const total = Number(finanzas.presupuesto?.monto_total || 0)
+  return total ? Math.round((finanzas.gastadoMes / total) * 100) : 0
 })
 
 const formato = (n) => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -193,44 +190,18 @@ const crearEtiquetaRapida = async () => {
   const nombre = nuevaEtiqueta.value.trim()
   if (!nombre) return
   try { await etiquetasStore.crear({ nombre }); nuevaEtiqueta.value = '' }
-  catch (e) { alert(e.response?.data?.message || 'No se pudo crear la etiqueta') }
+  catch (e) { ui.error(e.response?.data?.message || 'No se pudo crear la etiqueta') }
 }
 
 const borrarEtiqueta = async (etiqueta) => {
-  if (!confirm(`¿Eliminar la etiqueta "${etiqueta.nombre}"?`)) return
+  if (!(await ui.confirmar(`¿Eliminar la etiqueta "${etiqueta.nombre}"?`))) return
   try { await etiquetasStore.eliminar(etiqueta.id) }
-  catch (e) { alert('No se pudo eliminar la etiqueta') }
-}
-
-const cargarFinanzas = async () => {
-  const inicio = dayjs().startOf('month').format('YYYY-MM-DD')
-  const fin = dayjs().endOf('month').format('YYYY-MM-DD')
-  try {
-    const { data } = await obtenerResumenGastos(inicio, fin)
-    gastosMes.value = Number(data.data?.total || 0)
-  } catch (e) { gastosMes.value = 0 }
-  try {
-    const { data } = await obtenerPresupuestoVigente()
-    presupuesto.value = data.data || null
-  } catch (e) { presupuesto.value = null }
-}
-
-const definirPresupuesto = async () => {
-  const valor = prompt('Monto total del presupuesto (Bs.):')
-  if (valor === null) return
-  const monto = Number(valor)
-  if (!monto || monto <= 0) { alert('Monto inválido'); return }
-  try {
-    await crearPresupuesto({ monto_total: monto })
-    await cargarFinanzas()
-  } catch (e) {
-    alert(e.response?.data?.mensaje || 'No se pudo crear el presupuesto')
-  }
+  catch (e) { ui.error('No se pudo eliminar la etiqueta') }
 }
 
 onMounted(() => {
   etiquetasStore.cargar()
-  cargarFinanzas()
+  finanzas.cargar()
 })
 </script>
 

@@ -69,15 +69,25 @@
 
         <div v-if="!esEdicion">
           <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Recordatorios</label>
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-              <input type="checkbox" v-model="formulario.rec15" class="w-4 h-4 rounded accent-teal-700">
-              <span class="text-sm text-gray-700 font-medium">15 min antes</span>
-            </label>
-            <label class="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-              <input type="checkbox" v-model="formulario.rec60" class="w-4 h-4 rounded accent-teal-700">
-              <span class="text-sm text-gray-700 font-medium">1 h antes</span>
-            </label>
+          <div class="flex flex-wrap gap-2 mb-2">
+            <span v-for="(r, idx) in formulario.recordatorios" :key="idx"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-medium">
+              {{ r.cantidad }} {{ etiquetaUnidad(r.unidad, r.cantidad) }} antes
+              <button type="button" @click="quitarRecordatorio(idx)" class="hover:text-teal-900">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
+              </button>
+            </span>
+            <span v-if="formulario.recordatorios.length === 0" class="text-xs text-gray-400 py-1">Sin recordatorios</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input v-model.number="nuevoRec.cantidad" type="number" min="1" class="input-base w-20 py-1.5" />
+            <select v-model="nuevoRec.unidad" class="input-base w-auto py-1.5 appearance-none cursor-pointer">
+              <option value="minutos">minutos</option>
+              <option value="horas">horas</option>
+              <option value="dias">días</option>
+            </select>
+            <span class="text-xs text-gray-400">antes</span>
+            <button type="button" @click="agregarRecordatorio" class="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">+ Añadir</button>
           </div>
         </div>
 
@@ -102,6 +112,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import SelectorColor from '@/components/ui/SelectorColor.vue'
@@ -129,10 +141,22 @@ const formulario = ref({
   color_hex: '#3B82F6',
   estado: '',
   etiquetas: [],
-  rec15: false,
-  rec60: false,
+  recordatorios: [],
   recurrencia: null
 })
+
+const nuevoRec = ref({ cantidad: 15, unidad: 'minutos' })
+const factorUnidad = { minutos: 1, horas: 60, dias: 1440 }
+const etiquetaUnidad = (unidad, cantidad) => {
+  const mapa = { minutos: 'min', horas: cantidad === 1 ? 'hora' : 'horas', dias: cantidad === 1 ? 'día' : 'días' }
+  return mapa[unidad] || unidad
+}
+const agregarRecordatorio = () => {
+  if (!nuevoRec.value.cantidad || nuevoRec.value.cantidad <= 0) return
+  formulario.value.recordatorios.push({ cantidad: nuevoRec.value.cantidad, unidad: nuevoRec.value.unidad })
+  nuevoRec.value = { cantidad: 15, unidad: 'minutos' }
+}
+const quitarRecordatorio = (idx) => formulario.value.recordatorios.splice(idx, 1)
 
 const etiquetasPrevias = ref([])
 
@@ -155,18 +179,16 @@ const aFechaSql = (valor) => dayjs(valor).format('YYYY-MM-DD HH:mm:ss')
 
 const guardar = () => {
   if (!formulario.value.titulo.trim()) {
-    alert('El título es obligatorio')
+    ui.error('El título es obligatorio')
     return
   }
   if (dayjs(formulario.value.fechaFin).isSame(dayjs(formulario.value.fechaInicio)) ||
       dayjs(formulario.value.fechaFin).isBefore(dayjs(formulario.value.fechaInicio))) {
-    alert('La fecha de fin debe ser posterior a la de inicio')
+    ui.error('La fecha de fin debe ser posterior a la de inicio')
     return
   }
 
-  const recordatoriosMin = []
-  if (formulario.value.rec15) recordatoriosMin.push(15)
-  if (formulario.value.rec60) recordatoriosMin.push(60)
+  const recordatoriosMin = formulario.value.recordatorios.map((r) => r.cantidad * (factorUnidad[r.unidad] || 1))
 
   emit('guardar', {
     titulo: formulario.value.titulo.trim(),

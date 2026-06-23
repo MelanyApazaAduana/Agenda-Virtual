@@ -1,30 +1,18 @@
 import promisePool from '../config/database.js';
+import PresupuestoModel from './PresupuestoModel.js';
 
 class IngresoModel {
-    // Validar que el presupuesto pertenezca al usuario (si se especifica)
-    static async validarPresupuesto(usuarioId, presupuestoId) {
-        const [rows] = await promisePool.execute(
-            'SELECT id FROM presupuestos WHERE id = ? AND usuario_id = ?',
-            [presupuestoId, usuarioId]
-        );
-        if (rows.length === 0) {
-            throw new Error('El presupuesto especificado no existe o no pertenece al usuario');
-        }
-        return true;
-    }
-
-    // Crear nuevo ingreso
+    // Crear nuevo ingreso (siempre ligado al presupuesto único del usuario)
     static async crear(usuarioId, datos) {
-        const { monto, fuente, presupuesto_id, fecha, detalle } = datos;
+        const { monto, fuente, fecha, detalle } = datos;
 
         const montoFinal = Math.abs(parseFloat(monto));
         if (montoFinal <= 0) {
             throw new Error('El monto debe ser mayor a 0');
         }
 
-        if (presupuesto_id) {
-            await this.validarPresupuesto(usuarioId, presupuesto_id);
-        }
+        // Ligado automáticamente al presupuesto del usuario
+        const presupuesto = await PresupuestoModel.asegurar(usuarioId);
 
         const sql = `
             INSERT INTO ingresos (usuario_id, presupuesto_id, monto, fuente, fecha, detalle)
@@ -32,7 +20,7 @@ class IngresoModel {
         `;
         const [result] = await promisePool.execute(sql, [
             usuarioId,
-            presupuesto_id || null,
+            presupuesto.id,
             montoFinal,
             fuente || null,
             fecha,
@@ -97,7 +85,7 @@ class IngresoModel {
             throw new Error('Ingreso no encontrado o no pertenece al usuario');
         }
 
-        const { monto, fuente, presupuesto_id, fecha, detalle } = datos;
+        const { monto, fuente, fecha, detalle } = datos;
 
         let montoFinal = null;
         if (monto !== undefined && monto !== null) {
@@ -107,15 +95,11 @@ class IngresoModel {
             }
         }
 
-        if (presupuesto_id !== undefined && presupuesto_id) {
-            await this.validarPresupuesto(usuarioId, presupuesto_id);
-        }
-
+        // El presupuesto queda ligado al del usuario; no se cambia aquí.
         const sql = `
             UPDATE ingresos
             SET monto = COALESCE(?, monto),
                 fuente = ?,
-                presupuesto_id = ?,
                 fecha = COALESCE(?, fecha),
                 detalle = ?
             WHERE id = ? AND usuario_id = ?
@@ -124,7 +108,6 @@ class IngresoModel {
         const [result] = await promisePool.execute(sql, [
             montoFinal,
             fuente !== undefined ? (fuente || null) : ingresoExistente.fuente,
-            presupuesto_id !== undefined ? (presupuesto_id || null) : ingresoExistente.presupuesto_id,
             fecha !== undefined ? fecha : null,
             detalle !== undefined ? (detalle || null) : ingresoExistente.detalle,
             id,

@@ -30,14 +30,7 @@
         </div>
 
         <div>
-          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Presupuesto (opcional)</label>
-          <select v-model="formulario.presupuesto_id"
-            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-800 appearance-none cursor-pointer">
-            <option :value="null">Ninguno</option>
-            <option v-for="p in presupuestos" :key="p.id" :value="p.id">
-              Bs. {{ formato(p.monto_total) }} · {{ formatoFecha(p.creado_en) }}
-            </option>
-          </select>
+          <p class="text-[11px] text-gray-400">Se vincula automáticamente a tu presupuesto.</p>
         </div>
 
         <div>
@@ -65,31 +58,16 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import { crearIngreso } from '@/api/ingresos.js'
-import { listarPresupuestos } from '@/api/presupuestos.js'
 
 const router = useRouter()
 const enviando = ref(false)
 const error = ref('')
-const presupuestos = ref([])
 
 const formulario = ref({
   monto: null,
   fecha: dayjs().format('YYYY-MM-DD'),
   fuente: '',
-  detalle: '',
-  presupuesto_id: null
-})
-
-const formato = (n) => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const formatoFecha = (f) => (f ? dayjs(f).format('DD/MM/YYYY') : '')
-
-onMounted(async () => {
-  try {
-    const { data } = await listarPresupuestos()
-    presupuestos.value = data.data || []
-  } catch (e) {
-    console.error('Error al cargar presupuestos:', e)
-  }
+  detalle: ''
 })
 
 const guardarIngreso = async () => {
@@ -104,10 +82,9 @@ const guardarIngreso = async () => {
       monto: Number(formulario.value.monto),
       fecha: formulario.value.fecha,
       fuente: formulario.value.fuente || null,
-      detalle: formulario.value.detalle || null,
-      presupuesto_id: formulario.value.presupuesto_id || null
+      detalle: formulario.value.detalle || null
     })
-    router.push('/ingresos/reportes')
+    router.push('/ingresos')
   } catch (e) {
     error.value = e.response?.data?.mensaje || e.response?.data?.message || 'Error al registrar el ingreso'
   } finally {

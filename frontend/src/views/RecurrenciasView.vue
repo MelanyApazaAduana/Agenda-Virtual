@@ -40,6 +40,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import SelectorRecurrencia from '@/components/recurrencias/SelectorRecurrencia.vue'
@@ -63,11 +65,11 @@ onMounted(cargar)
 const crear = async () => {
   if (!nueva.value) return
   try { await crearRecurrencia(nueva.value); nueva.value = null; await cargar() }
-  catch (e) { alert(e.response?.data?.mensaje || 'No se pudo crear la regla') }
+  catch (e) { ui.error(e.response?.data?.mensaje || 'No se pudo crear la regla') }
 }
 
 const eliminar = async (r) => {
-  if (!confirm('¿Eliminar esta regla? Los eventos/tareas que la usan quedarán sin recurrencia.')) return
-  try { await eliminarRecurrencia(r.id); await cargar() } catch (e) { alert('Error') }
+  if (!(await ui.confirmar('¿Eliminar esta regla? Los eventos/tareas que la usan quedarán sin recurrencia.'))) return
+  try { await eliminarRecurrencia(r.id); await cargar() } catch (e) { ui.error('Error') }
 }
 </script>

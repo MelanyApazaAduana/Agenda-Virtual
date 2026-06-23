@@ -71,6 +71,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import ModalCrearTarea from '@/components/tareas/ModalCrearTarea.vue'
@@ -163,14 +165,14 @@ const guardarTarea = async (payload) => {
     await sincronizarEtiquetas('tarea', id, payload.etiquetas, payload.etiquetasPrevias)
     cerrarModal(); await cargarTareas()
   } catch (error) {
-    alert(error.response?.data?.message || 'Error al guardar la tarea')
+    ui.error(error.response?.data?.message || 'Error al guardar la tarea')
   }
 }
 
 const eliminarTareaItem = async (id) => {
-  if (!confirm('¿Eliminar esta tarea?')) return
+  if (!(await ui.confirmar('¿Eliminar esta tarea?'))) return
   try { await eliminarTarea(id); cerrarModal(); await cargarTareas() }
-  catch (e) { alert('No se pudo eliminar la tarea') }
+  catch (e) { ui.error('No se pudo eliminar la tarea') }
 }
 </script>
 

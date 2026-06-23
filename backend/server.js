@@ -17,6 +17,8 @@ import recordatorioRoutes from './routes/recordatorioRoutes.js';
 import gastoRoutes from './routes/gastoRoutes.js';
 import presupuestoRoutes from './routes/presupuestoRoutes.js';
 import recurrenciaRoutes from './routes/recurrenciaRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
+import { CARPETA_UPLOADS } from './config/uploads.js';
 
 import calendarioRoutes from './routes/calendarioRoutes.js';
 
@@ -72,6 +74,10 @@ app.use('/gastos',gastoRoutes);
 app.use('/presupuestos',presupuestoRoutes);
 
 app.use('/recurrencias',recurrenciaRoutes);
+
+// Archivos subidos: estático para servirlos + endpoint para subir
+app.use('/uploads', express.static(CARPETA_UPLOADS));
+app.use('/uploads', uploadRoutes);
 
 app.use('/calendario',calendarioRoutes);
 

@@ -191,6 +191,18 @@ class EventoModel {
             mensaje: `Se actualizaron ${result.affectedRows} eventos automáticos`
         };
     }
+
+    // Eventos que tienen una regla de recurrencia (con los datos de la regla)
+    static async listarConRecurrencia(usuarioId) {
+        const sql = `
+            SELECT e.*, r.intervalo, r.frecuencia_dias, r.fecha_fin AS rec_fecha_fin, r.num_rec
+            FROM eventos e
+            INNER JOIN recurrencias r ON e.recurrencia_id = r.id
+            WHERE e.usuario_id = ?
+        `;
+        const [rows] = await promisePool.execute(sql, [usuarioId]);
+        return rows;
+    }
 }
 
 export default EventoModel;

@@ -2,12 +2,11 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import dayjs from 'dayjs'
 import { obtenerResumenGastos } from '../api/gastos'
-import { obtenerPresupuestoVigente } from '../api/presupuestos'
+import { obtenerMiPresupuesto } from '../api/presupuestos'
 
-// Datos financieros compartidos: presupuesto vigente y gasto del mes en curso.
-// Lo consumen el widget del sidebar, PresupuestosView y ReportesView.
+// Datos financieros compartidos: presupuesto único del usuario y gasto del mes.
 export const useFinanzasStore = defineStore('finanzas', () => {
-  const presupuestoVigente = ref(null)
+  const presupuesto = ref(null)
   const gastadoMes = ref(0)
   const cargando = ref(false)
 
@@ -22,13 +21,13 @@ export const useFinanzasStore = defineStore('finanzas', () => {
       gastadoMes.value = 0
     }
     try {
-      const { data } = await obtenerPresupuestoVigente()
-      presupuestoVigente.value = data.data || null
+      const { data } = await obtenerMiPresupuesto()
+      presupuesto.value = data.data || null
     } catch (e) {
-      presupuestoVigente.value = null
+      presupuesto.value = null
     }
     cargando.value = false
   }
 
-  return { presupuestoVigente, gastadoMes, cargando, cargar }
+  return { presupuesto, gastadoMes, cargando, cargar }
 })

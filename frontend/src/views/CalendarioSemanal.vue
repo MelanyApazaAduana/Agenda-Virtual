@@ -20,7 +20,7 @@
       <div class="w-16 shrink-0 border-r border-gray-200 text-[10px] text-gray-400 font-medium flex items-center justify-center py-1 text-center">Todo el día</div>
       <div class="flex-1 grid grid-cols-7">
         <div v-for="dia in dias" :key="'ad-' + dia.iso" class="border-r border-gray-200 last:border-0 p-1 space-y-1 min-h-[40px]">
-          <div v-for="t in tareasDia(dia.fecha)" :key="'t' + t.id" @click="editar('tarea', t)"
+          <div v-for="t in tareasDia(dia.fecha)" :key="'t' + t.id + '-' + t.fecha_limite" @click="editar('tarea', t)"
             class="text-[10px] px-1.5 py-0.5 rounded truncate cursor-pointer font-medium"
             :style="{ backgroundColor: (t.color_hex || '#10B981') + '22', color: t.color_hex || '#047857' }">
             ✓ {{ t.titulo }}
@@ -47,7 +47,7 @@
             @dblclick="crearEnDia(dia)">
             <div v-for="h in horas" :key="h" class="border-b border-gray-100" :style="{ height: alturaHora + 'px' }"></div>
 
-            <div v-for="ev in eventosDia(dia.fecha)" :key="ev.id"
+            <div v-for="ev in eventosDia(dia.fecha)" :key="ev.id + '-' + ev.fecha_inicio"
               @click="editar('evento', ev)"
               class="absolute left-1 right-1 rounded px-2 py-1 text-[11px] overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition border-l-4"
               :style="{ top: ev.top + 'px', height: ev.alto + 'px', backgroundColor: (ev.color_hex || '#3B82F6') + '22', borderLeftColor: ev.color_hex || '#3B82F6' }">

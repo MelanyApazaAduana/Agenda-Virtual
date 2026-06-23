@@ -169,6 +169,18 @@ class TareaModel {
         const [rows] = await promisePool.execute(sql, [usuarioId, ahora]);
         return rows;
     }
+
+    // Tareas que tienen una regla de recurrencia (con los datos de la regla)
+    static async listarConRecurrencia(usuarioId) {
+        const sql = `
+            SELECT t.*, r.intervalo, r.frecuencia_dias, r.fecha_fin AS rec_fecha_fin, r.num_rec
+            FROM tareas t
+            INNER JOIN recurrencias r ON t.recurrencia_id = r.id
+            WHERE t.usuario_id = ?
+        `;
+        const [rows] = await promisePool.execute(sql, [usuarioId]);
+        return rows;
+    }
 }
 
 export default TareaModel;

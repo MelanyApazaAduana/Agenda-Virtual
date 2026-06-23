@@ -46,16 +46,7 @@
           </select>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Presupuesto (opcional)</label>
-          <select v-model="formulario.presupuesto_id"
-            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm text-gray-800 appearance-none cursor-pointer">
-            <option :value="null">Ninguno</option>
-            <option v-for="p in presupuestos" :key="p.id" :value="p.id">
-              Bs. {{ formato(p.monto_total) }} · {{ formatoFecha(p.creado_en) }}
-            </option>
-          </select>
-        </div>
+        <p class="text-[11px] text-gray-400">Se vincula automáticamente a tu presupuesto.</p>
 
         <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{{ error }}</div>
 
@@ -77,30 +68,23 @@ import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import { crearGasto } from '@/api/gastos.js'
 import { listarTareas } from '@/api/tareas.js'
-import { listarPresupuestos } from '@/api/presupuestos.js'
 
 const router = useRouter()
 const enviando = ref(false)
 const error = ref('')
 const tareas = ref([])
-const presupuestos = ref([])
 
 const formulario = ref({
   monto: null,
   fecha: dayjs().format('YYYY-MM-DD'),
   metodo_pago: '',
-  tarea_id: null,
-  presupuesto_id: null
+  tarea_id: null
 })
-
-const formato = (n) => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const formatoFecha = (f) => (f ? dayjs(f).format('DD/MM/YYYY') : '')
 
 onMounted(async () => {
   try {
-    const [rt, rp] = await Promise.all([listarTareas(), listarPresupuestos()])
+    const rt = await listarTareas()
     tareas.value = rt.data.data || []
-    presupuestos.value = rp.data.data || []
   } catch (e) {
     console.error('Error al cargar datos:', e)
   }
@@ -118,8 +102,7 @@ const guardarGasto = async () => {
       monto: Number(formulario.value.monto),
       fecha: formulario.value.fecha,
       metodo_pago: formulario.value.metodo_pago || null,
-      tarea_id: formulario.value.tarea_id || null,
-      presupuesto_id: formulario.value.presupuesto_id || null
+      tarea_id: formulario.value.tarea_id || null
     })
     router.push('/gastos')
   } catch (e) {

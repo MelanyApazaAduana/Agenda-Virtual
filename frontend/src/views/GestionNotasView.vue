@@ -50,6 +50,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import AppFab from '@/components/ui/AppFab.vue'
@@ -96,13 +98,13 @@ const guardarNota = async (payload) => {
     }
     cerrarModal(); await cargarNotas()
   } catch (error) {
-    alert(error.response?.data?.message || 'Error al guardar la nota')
+    ui.error(error.response?.data?.message || 'Error al guardar la nota')
   }
 }
 
 const eliminarNotaItem = async (id) => {
-  if (!confirm('¿Eliminar esta nota?')) return
+  if (!(await ui.confirmar('¿Eliminar esta nota?'))) return
   try { await eliminarNota(id); cerrarModal(); await cargarNotas() }
-  catch (e) { alert('No se pudo eliminar la nota') }
+  catch (e) { ui.error('No se pudo eliminar la nota') }
 }
 </script>

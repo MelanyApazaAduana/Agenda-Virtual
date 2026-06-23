@@ -40,6 +40,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, onMounted } from 'vue'
 import { useEtiquetasStore } from '@/stores/etiquetasStore'
 
@@ -71,7 +73,7 @@ const crearEtiqueta = async () => {
     nuevaEtiqueta.value = ''
     alternar(nueva.id)
   } catch (error) {
-    alert(error.response?.data?.message || 'No se pudo crear la etiqueta')
+    ui.error(error.response?.data?.message || 'No se pudo crear la etiqueta')
   }
 }
 </script>

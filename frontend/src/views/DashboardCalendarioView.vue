@@ -1,6 +1,15 @@
 <template>
   <div class="h-full flex flex-col">
     <div v-if="!cargando" class="flex-1 flex flex-col overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-white">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M6 13.5V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m12-3V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m-6-9V3.75m0 3.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 9.75V10.5" /></svg>
+        <span class="text-xs font-semibold text-gray-500">Etiqueta:</span>
+        <select v-model="etiquetaFiltro" class="text-xs border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-black cursor-pointer">
+          <option :value="null">Todas</option>
+          <option v-for="et in etiquetasStore.etiquetas" :key="et.id" :value="et.id">{{ et.nombre }}</option>
+        </select>
+        <span v-if="etiquetaFiltro" class="text-[11px] text-gray-400">(las notas se ocultan al filtrar)</span>
+      </div>
       <div class="grid grid-cols-7 border-b border-gray-200 bg-white">
         <div v-for="dia in diasSemana" :key="dia" class="py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-widest border-r border-gray-200 last:border-0">
           {{ dia }}
@@ -19,14 +28,14 @@
           >{{ item.dia }}</span>
 
           <div v-if="!item.fueraMes" class="flex-1 space-y-1 overflow-y-auto no-scrollbar">
-            <div v-for="evento in eventosDelDia(item.fecha)" :key="'e-' + evento.id"
+            <div v-for="evento in eventosDelDia(item.fecha)" :key="'e-' + evento.id + '-' + evento.fecha_inicio"
                  @click.stop="editar('evento', evento)"
                  class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate flex items-center gap-1 hover:opacity-80"
                  :style="{ backgroundColor: colorSuave(evento.color_hex), color: evento.color_hex || '#374151' }">
               <span class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: evento.color_hex || '#3B82F6' }"></span>
               {{ truncar(evento.titulo, 12) }}
             </div>
-            <div v-for="tarea in tareasDelDia(item.fecha)" :key="'t-' + tarea.id"
+            <div v-for="tarea in tareasDelDia(item.fecha)" :key="'t-' + tarea.id + '-' + tarea.fecha_limite"
                  @click.stop="editar('tarea', tarea)"
                  class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate flex items-center gap-1 hover:opacity-80"
                  :style="{ backgroundColor: colorSuave(tarea.color_hex), color: tarea.color_hex || '#374151' }">
@@ -139,6 +148,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import dayjs from 'dayjs'
 import { storeToRefs } from 'pinia'
 import { useCalendarioStore } from '@/stores/calendarioStore'
+import { useEtiquetasStore } from '@/stores/etiquetasStore'
+import { listarEntidadesPorEtiqueta } from '@/api/etiquetas'
 import { useAgenda } from '@/composables/useAgenda'
 import AppFab from '@/components/ui/AppFab.vue'
 import ModalCrearEvento from '@/components/eventos/ModalCrearEvento.vue'
@@ -155,8 +166,24 @@ const {
   eliminarEventoItem, eliminarTareaItem, eliminarNotaItem
 } = useAgenda()
 
+const etiquetasStore = useEtiquetasStore()
 const diaSeleccionado = ref(null)
 const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+
+// Filtro por etiqueta
+const etiquetaFiltro = ref(null)
+const idsFiltrados = ref(new Set())
+const pasaFiltro = (tipo, id) => !etiquetaFiltro.value || idsFiltrados.value.has(`${tipo}-${id}`)
+
+watch(etiquetaFiltro, async (id) => {
+  if (!id) { idsFiltrados.value = new Set(); return }
+  try {
+    const { data } = await listarEntidadesPorEtiqueta(id)
+    idsFiltrados.value = new Set((data.data || []).map((e) => `${e.entidad_tipo}-${e.entidad_id}`))
+  } catch (e) {
+    idsFiltrados.value = new Set()
+  }
+})
 
 const diasCalendario = computed(() => {
   const primerDia = dayjs(new Date(anio.value, mes.value, 1))
@@ -185,9 +212,9 @@ const diasCalendario = computed(() => {
 })
 
 const mismaFecha = (valor, fecha) => valor && dayjs(valor).isSame(fecha, 'day')
-const eventosDelDia = (fecha) => eventos.value.filter((e) => mismaFecha(e.fecha_inicio, fecha))
-const tareasDelDia = (fecha) => tareas.value.filter((t) => mismaFecha(t.fecha_limite, fecha))
-const notasDelDia = (fecha) => notas.value.filter((n) => mismaFecha(n.fecha_creacion, fecha))
+const eventosDelDia = (fecha) => eventos.value.filter((e) => mismaFecha(e.fecha_inicio, fecha) && pasaFiltro('evento', e.id))
+const tareasDelDia = (fecha) => tareas.value.filter((t) => mismaFecha(t.fecha_limite, fecha) && pasaFiltro('tarea', t.id))
+const notasDelDia = (fecha) => (etiquetaFiltro.value ? [] : notas.value.filter((n) => mismaFecha(n.fecha_creacion, fecha)))
 
 const fechaDeDiaSeleccionado = computed(() =>
   diaSeleccionado.value !== null ? dayjs(new Date(anio.value, mes.value, diaSeleccionado.value)) : null
@@ -235,6 +262,7 @@ const cerrarDetalleDia = () => { diaSeleccionado.value = null }
 
 onMounted(() => {
   calStore.setVista('mes')
+  etiquetasStore.cargar()
   if (foco.value.isSame(dayjs(), 'month')) diaSeleccionado.value = dayjs().date()
   recargarMes()
 })

@@ -87,6 +87,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import SelectorColor from '@/components/ui/SelectorColor.vue'
@@ -141,7 +143,7 @@ onMounted(async () => {
 
 const guardar = () => {
   if (!formulario.value.titulo.trim()) {
-    alert('El nombre de la tarea es obligatorio')
+    ui.error('El nombre de la tarea es obligatorio')
     return
   }
   emit('guardar', {

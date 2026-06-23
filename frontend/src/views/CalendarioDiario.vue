@@ -17,7 +17,7 @@
           <div class="flex-1 relative" @dblclick="abrirCrear('evento', isoFoco)">
             <div v-for="h in horas" :key="h" class="border-b border-gray-100" :style="{ height: alturaHora + 'px' }"></div>
 
-            <div v-for="ev in eventosDelDia" :key="ev.id"
+            <div v-for="ev in eventosDelDia" :key="ev.id + '-' + ev.fecha_inicio"
               @click="editar('evento', ev)"
               class="absolute left-3 right-3 rounded-lg px-3 py-2 overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition border-l-4"
               :style="{ top: ev.top + 'px', height: ev.alto + 'px', backgroundColor: (ev.color_hex || '#3B82F6') + '22', borderLeftColor: ev.color_hex || '#3B82F6' }">

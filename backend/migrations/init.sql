@@ -200,6 +200,7 @@ CREATE TABLE IF NOT EXISTS `notas` (
     `contenido` TEXT,
     `audio_url` TEXT,
     `imagen_url` TEXT,
+    `documento_url` TEXT,
     `color_hex` VARCHAR(7),
     `fecha_creacion` TIMESTAMP DEFAULT NOW(),
     `fecha_modificacion` TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),

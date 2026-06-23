@@ -59,6 +59,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import ChipEstado from '@/components/ui/ChipEstado.vue'
@@ -94,27 +96,27 @@ onMounted(cargar)
 
 const guardar = async (payload) => {
   try { await crearRecordatorio(payload); mostrarModal.value = false; await cargar() }
-  catch (e) { alert(e.response?.data?.mensaje || e.response?.data?.message || 'No se pudo crear el recordatorio') }
+  catch (e) { ui.error(e.response?.data?.mensaje || e.response?.data?.message || 'No se pudo crear el recordatorio') }
 }
 
-const marcar = async (r) => { try { await marcarRecordatorioLeido(r.id); await cargar() } catch (e) { alert('Error') } }
-const cancelar = async (r) => { try { await cancelarRecordatorio(r.id); await cargar() } catch (e) { alert('Error') } }
+const marcar = async (r) => { try { await marcarRecordatorioLeido(r.id); await cargar() } catch (e) { ui.error('Error') } }
+const cancelar = async (r) => { try { await cancelarRecordatorio(r.id); await cargar() } catch (e) { ui.error('Error') } }
 
 const posponer = async (r) => {
   const valor = prompt('Nueva fecha y hora (YYYY-MM-DD HH:mm):', dayjs(r.fecha_envio).add(1, 'day').format('YYYY-MM-DD HH:mm'))
   if (!valor) return
-  if (dayjs(valor).isBefore(dayjs())) { alert('Debe ser una fecha futura'); return }
+  if (dayjs(valor).isBefore(dayjs())) { ui.error('Debe ser una fecha futura'); return }
   try { await posponerRecordatorio(r.id, dayjs(valor).format('YYYY-MM-DD HH:mm:ss')); await cargar() }
-  catch (e) { alert(e.response?.data?.mensaje || 'No se pudo posponer') }
+  catch (e) { ui.error(e.response?.data?.mensaje || 'No se pudo posponer') }
 }
 
 const eliminar = async (r) => {
-  if (!confirm('¿Eliminar este recordatorio?')) return
-  try { await eliminarRecordatorio(r.id); await cargar() } catch (e) { alert('Error') }
+  if (!(await ui.confirmar('¿Eliminar este recordatorio?'))) return
+  try { await eliminarRecordatorio(r.id); await cargar() } catch (e) { ui.error('Error') }
 }
 
 const limpiarViejos = async () => {
-  if (!confirm('¿Eliminar los recordatorios leídos/cancelados de más de 30 días?')) return
-  try { await api.delete('/recordatorios/limpiar/viejos'); await cargar() } catch (e) { alert('Error') }
+  if (!(await ui.confirmar('¿Eliminar los recordatorios leídos/cancelados de más de 30 días?'))) return
+  try { await api.delete('/recordatorios/limpiar/viejos'); await cargar() } catch (e) { ui.error('Error') }
 }
 </script>

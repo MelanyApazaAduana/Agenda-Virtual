@@ -33,6 +33,10 @@ export const inicializarBaseDeDatos = async () => {
         // init.sql incluye CREATE DATABASE IF NOT EXISTS + USE + CREATE TABLE IF NOT EXISTS
         await conexion.query(sql);
 
+        // Migraciones idempotentes sobre BDs ya existentes (no afectan a BDs nuevas).
+        const dbNombre = process.env.DB_NAME || 'agenda_virtual_v3';
+        await ejecutarMigracion(conexion, `ALTER TABLE \`${dbNombre}\`.\`notas\` ADD COLUMN \`documento_url\` TEXT`);
+
         console.log('Base de datos verificada/creada correctamente (datos existentes conservados)');
     } catch (error) {
         // Mensajes claros segun la causa mas comun
@@ -46,6 +50,17 @@ export const inicializarBaseDeDatos = async () => {
         throw error;
     } finally {
         if (conexion) await conexion.end();
+    }
+};
+
+// Ejecuta una migración sin abortar el arranque si ya estaba aplicada (p. ej. columna duplicada).
+const ejecutarMigracion = async (conexion, sentencia) => {
+    try {
+        await conexion.query(sentencia);
+    } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') {
+            console.warn('Migracion omitida:', error.message);
+        }
     }
 };
 

@@ -1,4 +1,5 @@
 import promisePool from '../config/database.js';
+import PresupuestoModel from './PresupuestoModel.js';
 
 class GastoModel {
     // Validar que la tarea pertenezca al usuario
@@ -13,21 +14,9 @@ class GastoModel {
         return true;
     }
 
-    // Validar que el presupuesto pertenezca al usuario
-    static async validarPresupuesto(usuarioId, presupuestoId) {
-        const [rows] = await promisePool.execute(
-            'SELECT id FROM presupuestos WHERE id = ? AND usuario_id = ?',
-            [presupuestoId, usuarioId]
-        );
-        if (rows.length === 0) {
-            throw new Error('El presupuesto especificado no existe o no pertenece al usuario');
-        }
-        return true;
-    }
-
-    // Crear un nuevo gasto
+    // Crear un nuevo gasto (siempre ligado al presupuesto único del usuario)
     static async crear(usuarioId, datos) {
-        const { presupuesto_id, tarea_id, monto, fecha, metodo_pago } = datos;
+        const { tarea_id, monto, fecha, metodo_pago } = datos;
 
         if (!monto || monto <= 0) {
             throw new Error('El monto debe ser mayor a 0');
@@ -36,9 +25,9 @@ class GastoModel {
         if (tarea_id) {
             await this.validarTarea(usuarioId, tarea_id);
         }
-        if (presupuesto_id) {
-            await this.validarPresupuesto(usuarioId, presupuesto_id);
-        }
+
+        // Ligado automáticamente al presupuesto del usuario
+        const presupuesto = await PresupuestoModel.asegurar(usuarioId);
 
         const montoFinal = Math.abs(parseFloat(monto));
         const fechaFinal = fecha || new Date();
@@ -49,7 +38,7 @@ class GastoModel {
         `;
         const [result] = await promisePool.execute(sql, [
             usuarioId,
-            presupuesto_id || null,
+            presupuesto.id,
             tarea_id || null,
             montoFinal,
             fechaFinal,
@@ -146,7 +135,7 @@ class GastoModel {
             throw new Error('Gasto no encontrado o no pertenece al usuario');
         }
 
-        const { monto, fecha, metodo_pago, presupuesto_id, tarea_id } = datos;
+        const { monto, fecha, metodo_pago, tarea_id } = datos;
 
         if (monto !== undefined && monto <= 0) {
             throw new Error('El monto debe ser mayor a 0');
@@ -155,18 +144,15 @@ class GastoModel {
         if (tarea_id !== undefined && tarea_id) {
             await this.validarTarea(usuarioId, tarea_id);
         }
-        if (presupuesto_id !== undefined && presupuesto_id) {
-            await this.validarPresupuesto(usuarioId, presupuesto_id);
-        }
 
         const montoFinal = monto !== undefined ? Math.abs(parseFloat(monto)) : null;
 
+        // El presupuesto queda ligado al del usuario; no se cambia aquí.
         const sql = `
             UPDATE gastos
             SET monto = COALESCE(?, monto),
                 fecha = COALESCE(?, fecha),
                 metodo_pago = ?,
-                presupuesto_id = ?,
                 tarea_id = ?
             WHERE id = ? AND usuario_id = ?
         `;
@@ -175,7 +161,6 @@ class GastoModel {
             montoFinal,
             fecha !== undefined ? fecha : null,
             metodo_pago !== undefined ? (metodo_pago || null) : gastoExistente.metodo_pago,
-            presupuesto_id !== undefined ? (presupuesto_id || null) : gastoExistente.presupuesto_id,
             tarea_id !== undefined ? (tarea_id || null) : gastoExistente.tarea_id,
             id,
             usuarioId

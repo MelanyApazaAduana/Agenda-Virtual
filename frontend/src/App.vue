@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AuthLayout from './layouts/AuthLayout.vue'
 import DashboardLayout from './layouts/DashboardLayout.vue'
+import Notificaciones from './components/ui/Notificaciones.vue'
+import ModalConfirmacion from './components/ui/ModalConfirmacion.vue'
 import { useUsuarioStore } from './stores/usuarioStore'
 import { storeToRefs } from 'pinia'
 import { onMounted } from 'vue'
@@ -25,4 +27,6 @@ onMounted(async () => {
   <component :is="currentLayout">
     <router-view />
   </component>
+  <Notificaciones />
+  <ModalConfirmacion />
 </template>

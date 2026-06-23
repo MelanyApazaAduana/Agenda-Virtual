@@ -52,6 +52,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import Spinner from '@/components/ui/Spinner.vue'
@@ -83,15 +85,15 @@ const guardar = async (payload) => {
     if (modal.value.modo === 'editar') await actualizarIngreso(modal.value.valores.id, payload)
     else await crearIngreso(payload)
     cerrar(); await cargar()
-  } catch (e) { alert(e.response?.data?.mensaje || 'No se pudo guardar el ingreso') }
+  } catch (e) { ui.error(e.response?.data?.mensaje || 'No se pudo guardar el ingreso') }
 }
 
 const eliminarItem = async (id) => {
-  if (!confirm('¿Eliminar este ingreso?')) return
-  try { await eliminarIngreso(id); cerrar(); await cargar() } catch (e) { alert('Error') }
+  if (!(await ui.confirmar('¿Eliminar este ingreso?'))) return
+  try { await eliminarIngreso(id); cerrar(); await cargar() } catch (e) { ui.error('Error') }
 }
 const borrar = async (ing) => {
-  if (!confirm('¿Eliminar este ingreso?')) return
-  try { await eliminarIngreso(ing.id); await cargar() } catch (e) { alert('Error') }
+  if (!(await ui.confirmar('¿Eliminar este ingreso?'))) return
+  try { await eliminarIngreso(ing.id); await cargar() } catch (e) { ui.error('Error') }
 }
 </script>

@@ -49,17 +49,50 @@
           </select>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="label-campo">URL de imagen (opc.)</label>
-            <input v-model="formulario.imagen_url" type="url" placeholder="https://..." class="input-base" />
-          </div>
-          <div>
-            <label class="label-campo">URL de audio (opc.)</label>
-            <input v-model="formulario.audio_url" type="url" placeholder="https://..." class="input-base" />
+        <div>
+          <label class="label-campo">Archivos adjuntos</label>
+          <div class="grid grid-cols-3 gap-2">
+            <!-- Documento -->
+            <div class="border border-gray-200 rounded-lg p-2 text-center">
+              <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Documento</p>
+              <template v-if="formulario.documento_url">
+                <a :href="formulario.documento_url" target="_blank" class="text-xs text-teal-600 underline block truncate">Ver archivo</a>
+                <button type="button" @click="formulario.documento_url = ''" class="text-[10px] text-red-500 mt-1">Quitar</button>
+              </template>
+              <label v-else class="cursor-pointer text-xs text-gray-500 hover:text-black">
+                <span v-if="subiendo === 'documento'">Subiendo…</span>
+                <span v-else>+ PDF, DOC, TXT</span>
+                <input type="file" accept=".pdf,.txt,.doc,.docx,.odt,.rtf" class="hidden" @change="subir('documento', $event)" />
+              </label>
+            </div>
+            <!-- Imagen -->
+            <div class="border border-gray-200 rounded-lg p-2 text-center">
+              <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Imagen</p>
+              <template v-if="formulario.imagen_url">
+                <img :src="formulario.imagen_url" alt="" class="w-full h-12 object-cover rounded mb-1" />
+                <button type="button" @click="formulario.imagen_url = ''" class="text-[10px] text-red-500">Quitar</button>
+              </template>
+              <label v-else class="cursor-pointer text-xs text-gray-500 hover:text-black">
+                <span v-if="subiendo === 'imagen'">Subiendo…</span>
+                <span v-else>+ PNG, JPG</span>
+                <input type="file" accept=".png,.jpg,.jpeg,.gif,.webp" class="hidden" @change="subir('imagen', $event)" />
+              </label>
+            </div>
+            <!-- Audio -->
+            <div class="border border-gray-200 rounded-lg p-2 text-center">
+              <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Audio</p>
+              <template v-if="formulario.audio_url">
+                <audio :src="formulario.audio_url" controls class="w-full h-7"></audio>
+                <button type="button" @click="formulario.audio_url = ''" class="text-[10px] text-red-500">Quitar</button>
+              </template>
+              <label v-else class="cursor-pointer text-xs text-gray-500 hover:text-black">
+                <span v-if="subiendo === 'audio'">Subiendo…</span>
+                <span v-else>+ MP3</span>
+                <input type="file" accept=".mp3,.wav,.ogg,.m4a,.aac" class="hidden" @change="subir('audio', $event)" />
+              </label>
+            </div>
           </div>
         </div>
-        <p class="text-[11px] text-gray-400 -mt-2">Pega una URL de imagen/audio (aún no hay subida de archivos).</p>
       </div>
 
       <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white shrink-0">
@@ -77,12 +110,15 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, computed, onMounted } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import SelectorColor from '@/components/ui/SelectorColor.vue'
 import { listarEventos } from '@/api/eventos'
 import { listarTareas } from '@/api/tareas'
 import { autoguardarNota } from '@/api/notas'
+import { subirArchivo } from '@/api/uploads'
 
 const props = defineProps({
   modo: { type: String, default: 'crear' },
@@ -97,6 +133,7 @@ const vinculo = ref('ninguno')
 const eventos = ref([])
 const tareas = ref([])
 const autoguardado = ref(false)
+const subiendo = ref(null)
 
 const formulario = ref({
   titulo: '',
@@ -105,8 +142,24 @@ const formulario = ref({
   evento_id: null,
   tarea_id: null,
   audio_url: '',
-  imagen_url: ''
+  imagen_url: '',
+  documento_url: ''
 })
+
+const subir = async (tipo, evento) => {
+  const archivo = evento.target.files?.[0]
+  if (!archivo) return
+  subiendo.value = tipo
+  try {
+    const { data } = await subirArchivo(tipo, archivo)
+    formulario.value[`${tipo}_url`] = data.data.url
+  } catch (e) {
+    ui.error(e.response?.data?.mensaje || 'No se pudo subir el archivo')
+  } finally {
+    subiendo.value = null
+    evento.target.value = ''
+  }
+}
 
 onMounted(async () => {
   try {
@@ -124,7 +177,8 @@ onMounted(async () => {
       evento_id: v.evento_id || null,
       tarea_id: v.tarea_id || null,
       audio_url: v.audio_url || '',
-      imagen_url: v.imagen_url || ''
+      imagen_url: v.imagen_url || '',
+      documento_url: v.documento_url || ''
     }
     vinculo.value = v.evento_id ? 'evento' : v.tarea_id ? 'tarea' : 'ninguno'
 
@@ -150,11 +204,12 @@ const construirPayload = () => ({
   evento_id: vinculo.value === 'evento' ? formulario.value.evento_id : null,
   tarea_id: vinculo.value === 'tarea' ? formulario.value.tarea_id : null,
   audio_url: formulario.value.audio_url || null,
-  imagen_url: formulario.value.imagen_url || null
+  imagen_url: formulario.value.imagen_url || null,
+  documento_url: formulario.value.documento_url || null
 })
 
 const guardar = () => {
-  if (!formulario.value.titulo.trim()) { alert('El título de la nota es obligatorio'); return }
+  if (!formulario.value.titulo.trim()) { ui.error('El título de la nota es obligatorio'); return }
   emit('guardar', construirPayload())
 }
 </script>

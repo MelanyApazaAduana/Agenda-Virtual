@@ -1,10 +1,10 @@
 <template>
-  <span class="flex items-center gap-2 font-bold text-lg tracking-wide text-gray-900 shrink-0">
+  <RouterLink to="/calendario" class="flex items-center gap-2 font-bold text-lg tracking-wide text-gray-900 shrink-0 hover:opacity-80 transition">
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-5 h-5">
       <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
     Agenda Virtual
-  </span>
+  </RouterLink>
 
   <div class="flex-1 flex items-center justify-center gap-4 text-lg font-bold text-gray-800">
     <button @click="calStore.irHoy" class="shrink-0 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">Hoy</button>

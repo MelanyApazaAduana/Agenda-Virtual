@@ -25,7 +25,7 @@ class NotaModel {
 
     // Crear una nueva nota
     static async crear(usuarioId, datos) {
-        const { titulo, contenido, audio_url, imagen_url, color_hex, evento_id, tarea_id } = datos;
+        const { titulo, contenido, audio_url, imagen_url, documento_url, color_hex, evento_id, tarea_id } = datos;
 
         if (!titulo || titulo.trim() === '') {
             throw new Error('El título es obligatorio');
@@ -35,8 +35,8 @@ class NotaModel {
         if (tarea_id) await this.validarTarea(usuarioId, tarea_id);
 
         const sql = `
-            INSERT INTO notas (usuario_id, evento_id, tarea_id, titulo, contenido, audio_url, imagen_url, color_hex)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO notas (usuario_id, evento_id, tarea_id, titulo, contenido, audio_url, imagen_url, documento_url, color_hex)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const [result] = await promisePool.execute(sql, [
             usuarioId,
@@ -46,6 +46,7 @@ class NotaModel {
             contenido || null,
             audio_url || null,
             imagen_url || null,
+            documento_url || null,
             color_hex || null
         ]);
 
@@ -131,7 +132,7 @@ class NotaModel {
             throw new Error('Nota no encontrada');
         }
 
-        const { titulo, contenido, audio_url, imagen_url, color_hex, evento_id, tarea_id } = datos;
+        const { titulo, contenido, audio_url, imagen_url, documento_url, color_hex, evento_id, tarea_id } = datos;
 
         if (titulo !== undefined && titulo.trim() === '') {
             throw new Error('El título no puede estar vacío');
@@ -146,6 +147,7 @@ class NotaModel {
                 contenido = ?,
                 audio_url = ?,
                 imagen_url = ?,
+                documento_url = ?,
                 color_hex = ?,
                 evento_id = ?,
                 tarea_id = ?,
@@ -158,6 +160,7 @@ class NotaModel {
             contenido !== undefined ? (contenido || null) : notaExistente.contenido,
             audio_url !== undefined ? (audio_url || null) : notaExistente.audio_url,
             imagen_url !== undefined ? (imagen_url || null) : notaExistente.imagen_url,
+            documento_url !== undefined ? (documento_url || null) : notaExistente.documento_url,
             color_hex !== undefined ? (color_hex || null) : notaExistente.color_hex,
             evento_id !== undefined ? (evento_id || null) : notaExistente.evento_id,
             tarea_id !== undefined ? (tarea_id || null) : notaExistente.tarea_id,

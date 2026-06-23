@@ -1,10 +1,7 @@
 import express from 'express';
 import {
-    listarPresupuestos,
-    obtenerPresupuestoVigente,
-    obtenerPresupuesto,
-    crearPresupuesto,
-    eliminarPresupuesto
+    obtenerMiPresupuesto,
+    establecerMiPresupuesto
 } from '../controllers/presupuestoController.js';
 import { verificarAutenticacion } from '../middleware/auth.js';
 
@@ -12,10 +9,8 @@ const router = express.Router();
 
 router.use(verificarAutenticacion);
 
-router.get('/', listarPresupuestos);
-router.get('/vigente', obtenerPresupuestoVigente);
-router.get('/:id', obtenerPresupuesto);
-router.post('/', crearPresupuesto);
-router.delete('/:id', eliminarPresupuesto);
+// Presupuesto único por usuario
+router.get('/mi', obtenerMiPresupuesto);
+router.put('/mi', establecerMiPresupuesto);
 
 export default router;

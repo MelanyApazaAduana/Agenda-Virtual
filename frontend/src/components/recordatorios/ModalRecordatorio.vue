@@ -50,6 +50,8 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore'
+const ui = useUiStore()
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import { listarEventos } from '@/api/eventos'
@@ -78,8 +80,8 @@ onMounted(async () => {
 const cambiarTipo = (t) => { tipo.value = t; entidadId.value = null }
 
 const guardar = () => {
-  if (!entidadId.value) { alert(`Selecciona ${tipo.value === 'evento' ? 'un evento' : 'una tarea'}`); return }
-  if (dayjs(fechaEnvio.value).isBefore(dayjs())) { alert('La fecha de envío debe ser futura'); return }
+  if (!entidadId.value) { ui.error(`Selecciona ${tipo.value === 'evento' ? 'un evento' : 'una tarea'}`); return }
+  if (dayjs(fechaEnvio.value).isBefore(dayjs())) { ui.error('La fecha de envío debe ser futura'); return }
   const payload = {
     fecha_envio: dayjs(fechaEnvio.value).format('YYYY-MM-DD HH:mm:ss'),
     mensaje: mensaje.value || null
