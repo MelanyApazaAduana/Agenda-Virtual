@@ -14,7 +14,7 @@
 
       <div class="card p-6 mb-8">
         <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">Nueva regla</h3>
-        <SelectorRecurrencia v-model="nueva" />
+        <SelectorRecurrencia v-model="nueva" mostrar-inicio />
         <div class="flex justify-end mt-4">
           <button @click="crear" :disabled="!nueva" class="btn-primario">Crear regla</button>
         </div>
@@ -25,9 +25,9 @@
       <ul v-else class="space-y-2">
         <li v-for="r in recurrencias" :key="r.id" class="card p-4 flex items-center justify-between">
           <div>
-            <p class="text-sm font-semibold text-gray-900 capitalize">{{ r.intervalo }}<span v-if="r.frecuencia_dias"> · cada {{ r.frecuencia_dias }} días</span></p>
+            <p class="text-sm font-semibold text-gray-900 capitalize">Cada {{ unidadTexto(r.intervalo) }}</p>
             <p class="text-xs text-gray-500 mt-0.5">
-              Desde {{ formatoFecha(r.fecha_inicio) }}<span v-if="r.fecha_fin"> hasta {{ formatoFecha(r.fecha_fin) }}</span><span v-if="r.num_rec"> · {{ r.num_rec }} repeticiones</span>
+              Desde {{ formatoFecha(r.fecha_inicio) }}<span v-if="r.fecha_fin"> hasta {{ formatoFecha(r.fecha_fin) }}</span>
             </p>
           </div>
           <button @click="eliminar(r)" class="text-gray-300 hover:text-red-500 transition">
@@ -54,6 +54,7 @@ const cargando = ref(true)
 const nueva = ref(null)
 
 const formatoFecha = (f) => (f ? dayjs(f).format('DD/MM/YYYY') : '')
+const unidadTexto = (intervalo) => ({ diario: 'día', semanal: 'semana', mensual: 'mes', anual: 'año' }[intervalo] || intervalo)
 
 const cargar = async () => {
   cargando.value = true

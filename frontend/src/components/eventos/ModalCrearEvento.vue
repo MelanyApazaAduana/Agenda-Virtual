@@ -190,6 +190,13 @@ const guardar = () => {
 
   const recordatoriosMin = formulario.value.recordatorios.map((r) => r.cantidad * (factorUnidad[r.unidad] || 1))
 
+  // La recurrencia arranca desde la fecha del propio evento
+  const recurrencia = formulario.value.recurrencia
+  if (recurrencia) {
+    if (!recurrencia.fecha_fin) { ui.error('Indica hasta qué fecha se repite el evento'); return }
+    recurrencia.fecha_inicio = aFechaSql(formulario.value.fechaInicio)
+  }
+
   emit('guardar', {
     titulo: formulario.value.titulo.trim(),
     descripcion: formulario.value.descripcion || null,
@@ -201,7 +208,7 @@ const guardar = () => {
     etiquetas: formulario.value.etiquetas,
     etiquetasPrevias: etiquetasPrevias.value,
     recordatoriosMin,
-    recurrencia: formulario.value.recurrencia
+    recurrencia
   })
 }
 </script>

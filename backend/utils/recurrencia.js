@@ -1,21 +1,18 @@
-// Expande una regla de recurrencia en ocurrencias concretas dentro de un rango.
-// Trabaja con Date nativo (el backend no usa dayjs).
+// Genera las fechas de una recurrencia. El único criterio es el intervalo
+// (diario/semanal/mensual/anual) y el rango [ancla, fecha_fin]. La fecha de
+// inicio (ancla) es la del propio evento/tarea; se generan ocurrencias a partir
+// de ahí, una por intervalo, hasta la fecha_fin (incluida).
 
 const dosDigitos = (n) => String(n).padStart(2, '0');
 
-// Formatea un Date a 'YYYY-MM-DD HH:mm:ss'
 const aTexto = (fecha) =>
     `${fecha.getFullYear()}-${dosDigitos(fecha.getMonth() + 1)}-${dosDigitos(fecha.getDate())} ` +
     `${dosDigitos(fecha.getHours())}:${dosDigitos(fecha.getMinutes())}:${dosDigitos(fecha.getSeconds())}`;
 
-// Calcula la i-ésima ocurrencia a partir del ancla según la regla.
-const calcularOcurrencia = (ancla, regla, i) => {
+// Devuelve un nuevo Date = ancla + i intervalos
+const avanzar = (ancla, intervalo, i) => {
     const fecha = new Date(ancla);
-    if (regla.frecuencia_dias && Number(regla.frecuencia_dias) > 0) {
-        fecha.setDate(fecha.getDate() + i * Number(regla.frecuencia_dias));
-        return fecha;
-    }
-    switch (regla.intervalo) {
+    switch (intervalo) {
         case 'diario':  fecha.setDate(fecha.getDate() + i); break;
         case 'semanal': fecha.setDate(fecha.getDate() + i * 7); break;
         case 'mensual': fecha.setMonth(fecha.getMonth() + i); break;
@@ -25,36 +22,30 @@ const calcularOcurrencia = (ancla, regla, i) => {
     return fecha;
 };
 
-// Devuelve las ocurrencias (i >= 1) de la regla dentro de [rangoInicio, rangoFin].
-// anclaInicio/anclaFin: fechas del evento/tarea base. anclaFin puede ser null (tareas).
-export const generarOcurrencias = (anclaInicio, anclaFin, regla, rangoInicio, rangoFin) => {
-    const ocurrencias = [];
-    if (!anclaInicio || !regla) return ocurrencias;
+// Genera TODAS las ocurrencias (i >= 1) desde el ancla hasta fechaFin (incluida).
+// anclaInicio: fecha del evento/tarea. anclaFin: fecha fin del evento (null en tareas).
+// Devuelve [{ fecha_inicio, fecha_fin }]. Tope de seguridad para evitar series enormes.
+export const generarFechas = (anclaInicio, intervalo, fechaFin, anclaFin = null, maxOcurrencias = 500) => {
+    const fechas = [];
+    if (!anclaInicio || !fechaFin || !intervalo) return fechas;
 
     const inicio = new Date(anclaInicio);
     const fin = anclaFin ? new Date(anclaFin) : null;
     const duracionMs = fin ? fin.getTime() - inicio.getTime() : 0;
 
-    const rangoIni = new Date(`${rangoInicio}T00:00:00`);
-    const rangoFinDia = new Date(`${rangoFin}T23:59:59`);
-    const reglaFin = regla.rec_fecha_fin ? new Date(regla.rec_fecha_fin) : null;
+    const limite = new Date(fechaFin);
+    limite.setHours(23, 59, 59, 999);
 
-    // Tope de repeticiones: num_rec cuenta el ancla como la 1ª, así que generamos num_rec-1 extra.
-    const maxExtra = regla.num_rec && Number(regla.num_rec) > 0 ? Number(regla.num_rec) - 1 : 500;
-
-    for (let i = 1; i <= maxExtra; i++) {
-        const occInicio = calcularOcurrencia(inicio, regla, i);
-        if (occInicio > rangoFinDia) break;            // ya nos pasamos del rango visible
-        if (reglaFin && occInicio > reglaFin) break;   // la regla terminó
-        if (occInicio >= rangoIni) {
-            const occFin = duracionMs ? new Date(occInicio.getTime() + duracionMs) : null;
-            ocurrencias.push({
-                fecha_inicio: aTexto(occInicio),
-                fecha_fin: occFin ? aTexto(occFin) : null
-            });
-        }
+    for (let i = 1; i <= maxOcurrencias; i++) {
+        const occInicio = avanzar(inicio, intervalo, i);
+        if (occInicio > limite) break;
+        const occFin = duracionMs ? new Date(occInicio.getTime() + duracionMs) : null;
+        fechas.push({
+            fecha_inicio: aTexto(occInicio),
+            fecha_fin: occFin ? aTexto(occFin) : null
+        });
     }
-    return ocurrencias;
+    return fechas;
 };
 
-export default generarOcurrencias;
+export default generarFechas;

@@ -1,4 +1,6 @@
 import EventoModel from '../models/EventoModel.js';
+import RecurrenciaModel from '../models/RecurrenciaModel.js';
+import { generarFechas } from '../utils/recurrencia.js';
 
 // Color por defecto del bloque de evento en el calendario (azul)
 const COLOR_EVENTO_POR_DEFECTO = '#3B82F6';
@@ -65,6 +67,7 @@ export const crearEvento = async (req, res) => {
             estadoFinal = req.body.estado;
         }
 
+        const colorFinal = color_hex || COLOR_EVENTO_POR_DEFECTO;
         const evento = await EventoModel.crear({
             usuario_id: usuarioId,
             titulo: titulo.trim(),
@@ -72,15 +75,40 @@ export const crearEvento = async (req, res) => {
             fecha_inicio,
             fecha_fin,
             ubicacion: ubicacion || null,
-            color_hex: color_hex || COLOR_EVENTO_POR_DEFECTO,
+            color_hex: colorFinal,
             estado: estadoFinal,
             recurrencia_id: recurrencia_id || null
         });
+
+        // Si tiene recurrencia, se materializan las ocurrencias (registros reales)
+        // desde la fecha del evento hasta la fecha_fin de la regla, una por intervalo.
+        let ocurrenciasCreadas = 0;
+        if (recurrencia_id) {
+            const regla = await RecurrenciaModel.obtenerPorId(recurrencia_id, usuarioId);
+            if (regla && regla.fecha_fin) {
+                const fechas = generarFechas(fecha_inicio, regla.intervalo, regla.fecha_fin, fecha_fin);
+                for (const f of fechas) {
+                    await EventoModel.crear({
+                        usuario_id: usuarioId,
+                        titulo: titulo.trim(),
+                        descripcion: descripcion || null,
+                        fecha_inicio: f.fecha_inicio,
+                        fecha_fin: f.fecha_fin,
+                        ubicacion: ubicacion || null,
+                        color_hex: colorFinal,
+                        estado: EventoModel.calcularEstadoPorFechas(f.fecha_inicio, f.fecha_fin),
+                        recurrencia_id
+                    });
+                    ocurrenciasCreadas++;
+                }
+            }
+        }
 
         res.status(201).json({
             success: true,
             message: 'Evento creado exitosamente',
             data: evento,
+            ocurrencias_creadas: ocurrenciasCreadas,
             meta: {
                 estado_calculado: estadoCalculado,
                 estado_final: estadoFinal,

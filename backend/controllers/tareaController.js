@@ -1,4 +1,6 @@
 import TareaModel from '../models/TareaModel.js';
+import RecurrenciaModel from '../models/RecurrenciaModel.js';
+import { generarFechas } from '../utils/recurrencia.js';
 
 // Color por defecto de la tarjeta de tarea (verde)
 const COLOR_TAREA_POR_DEFECTO = '#10B981';
@@ -24,6 +26,7 @@ export const crearTarea = async (req, res) => {
             });
         }
 
+        const colorFinal = color_hex || COLOR_TAREA_POR_DEFECTO;
         const nuevaTarea = await TareaModel.crear({
             usuario_id: usuarioId,
             titulo: titulo.trim(),
@@ -32,14 +35,39 @@ export const crearTarea = async (req, res) => {
             fecha_completado: fecha_completado || null,
             estado: estado || 'por_hacer',
             prioridad: prioridad || 'media',
-            color_hex: color_hex || COLOR_TAREA_POR_DEFECTO,
+            color_hex: colorFinal,
             recurrencia_id: recurrencia_id || null
         });
+
+        // Materializa las ocurrencias de la recurrencia (a partir de la fecha
+        // límite, una por intervalo, hasta la fecha_fin de la regla).
+        let ocurrenciasCreadas = 0;
+        if (recurrencia_id && fecha_limite) {
+            const regla = await RecurrenciaModel.obtenerPorId(recurrencia_id, usuarioId);
+            if (regla && regla.fecha_fin) {
+                const fechas = generarFechas(fecha_limite, regla.intervalo, regla.fecha_fin);
+                for (const f of fechas) {
+                    await TareaModel.crear({
+                        usuario_id: usuarioId,
+                        titulo: titulo.trim(),
+                        descripcion: descripcion || null,
+                        fecha_limite: f.fecha_inicio,
+                        fecha_completado: null,
+                        estado: 'por_hacer',
+                        prioridad: prioridad || 'media',
+                        color_hex: colorFinal,
+                        recurrencia_id
+                    });
+                    ocurrenciasCreadas++;
+                }
+            }
+        }
 
         res.status(201).json({
             success: true,
             message: 'Tarea creada exitosamente',
-            data: nuevaTarea
+            data: nuevaTarea,
+            ocurrencias_creadas: ocurrenciasCreadas
         });
 
     } catch (error) {

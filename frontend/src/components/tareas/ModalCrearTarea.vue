@@ -146,16 +146,26 @@ const guardar = () => {
     ui.error('El nombre de la tarea es obligatorio')
     return
   }
+  const fechaLimite = formulario.value.fechaLimite ? dayjs(formulario.value.fechaLimite).format('YYYY-MM-DD HH:mm:ss') : null
+
+  // La recurrencia parte de la fecha límite de la tarea
+  const recurrencia = formulario.value.recurrencia
+  if (recurrencia) {
+    if (!fechaLimite) { ui.error('Para repetir, indica la fecha de vencimiento'); return }
+    if (!recurrencia.fecha_fin) { ui.error('Indica hasta qué fecha se repite la tarea'); return }
+    recurrencia.fecha_inicio = fechaLimite
+  }
+
   emit('guardar', {
     titulo: formulario.value.titulo.trim(),
     descripcion: formulario.value.descripcion || null,
     prioridad: formulario.value.prioridad,
-    fecha_limite: formulario.value.fechaLimite ? dayjs(formulario.value.fechaLimite).format('YYYY-MM-DD HH:mm:ss') : null,
+    fecha_limite: fechaLimite,
     estado: esEdicion.value ? formulario.value.estado : undefined,
     color_hex: formulario.value.color_hex,
     etiquetas: formulario.value.etiquetas,
     etiquetasPrevias: etiquetasPrevias.value,
-    recurrencia: formulario.value.recurrencia
+    recurrencia
   })
 }
 </script>
