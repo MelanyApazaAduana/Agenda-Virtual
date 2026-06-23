@@ -10,7 +10,7 @@ const backend = { target: 'http://localhost:3000', changeOrigin: true }
 const prefijosApi = [
   '/auth', '/eventos', '/tareas', '/etiquetas', '/notas', '/recordatorios',
   '/gastos', '/ingresos', '/presupuestos', '/recurrencias', '/calendario',
-  '/uploads', '/api'
+  '/productividad', '/uploads', '/api'
 ]
 
 export default defineConfig({

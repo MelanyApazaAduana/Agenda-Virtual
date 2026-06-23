@@ -9,7 +9,9 @@ export const crearEvento = (datos) => api.post('/eventos', datos)
 
 export const actualizarEvento = (id, datos) => api.put(`/eventos/${id}`, datos)
 
-export const eliminarEvento = (id) => api.delete(`/eventos/${id}`)
+// serie=true elimina toda la serie recurrente; por defecto solo este evento
+export const eliminarEvento = (id, serie = false) =>
+  api.delete(`/eventos/${id}`, { params: serie ? { serie: true } : {} })
 
 export const cambiarEstadoEvento = (id, estado) =>
   api.patch(`/eventos/${id}/estado`, { estado })

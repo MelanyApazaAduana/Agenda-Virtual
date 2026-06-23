@@ -127,6 +127,13 @@ class TareaModel {
         return result.affectedRows > 0;
     }
 
+    // Eliminar toda la serie de tareas que comparten una misma recurrencia
+    static async eliminarSerie(recurrenciaId, usuarioId) {
+        const sql = 'DELETE FROM tareas WHERE recurrencia_id = ? AND usuario_id = ?';
+        const [result] = await promisePool.execute(sql, [recurrenciaId, usuarioId]);
+        return result.affectedRows;
+    }
+
     // Cambiar estado de una tarea
     static async cambiarEstado(id, usuarioId, nuevoEstado) {
         const estadosPermitidos = ['por_hacer', 'en_progreso', 'completada', 'cancelada'];

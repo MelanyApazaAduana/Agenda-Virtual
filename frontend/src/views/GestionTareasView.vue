@@ -79,6 +79,7 @@ import ModalCrearTarea from '@/components/tareas/ModalCrearTarea.vue'
 import { listarTareas, crearTarea, actualizarTarea, eliminarTarea, cambiarEstadoTarea } from '@/api/tareas.js'
 import { crearRecurrencia } from '@/api/recurrencias.js'
 import { sincronizarEtiquetas } from '@/utils/etiquetasSync'
+import { confirmarEliminacion } from '@/utils/eliminacion'
 
 const cargando = ref(true)
 const busqueda = ref('')
@@ -170,8 +171,10 @@ const guardarTarea = async (payload) => {
 }
 
 const eliminarTareaItem = async (id) => {
-  if (!(await ui.confirmar('¿Eliminar esta tarea?'))) return
-  try { await eliminarTarea(id); cerrarModal(); await cargarTareas() }
+  const tarea = tareas.value.find((t) => t.id === id)
+  const decision = await confirmarEliminacion(ui, !!tarea?.recurrencia_id, 'esta tarea', 'la serie de tareas')
+  if (!decision.confirmado) return
+  try { await eliminarTarea(id, decision.serie); cerrarModal(); await cargarTareas() }
   catch (e) { ui.error('No se pudo eliminar la tarea') }
 }
 </script>

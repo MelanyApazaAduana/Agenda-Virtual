@@ -2,11 +2,7 @@
   <div class="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
     
     <div class="flex flex-col items-center mb-6 text-center">
-      <div class="bg-black text-white p-3 rounded-2xl shadow-md mb-3 flex items-center justify-center w-12 h-12">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-      </div>
+      <img src="/logo.svg" alt="Agenda Virtual" class="w-16 h-16 mb-3 rounded-2xl shadow-md" />
       <h1 class="text-2xl font-bold text-gray-900 tracking-wide">Agenda Virtual</h1>
       <p class="text-sm text-gray-500 mt-1">Sueña en grande, actua en pequeño</p>
     </div>

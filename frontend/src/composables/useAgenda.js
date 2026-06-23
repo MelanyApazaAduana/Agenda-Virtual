@@ -7,6 +7,7 @@ import { crearNota, actualizarNota, eliminarNota } from '@/api/notas.js'
 import { crearRecordatorio } from '@/api/recordatorios.js'
 import { crearRecurrencia } from '@/api/recurrencias.js'
 import { sincronizarEtiquetas } from '@/utils/etiquetasSync'
+import { confirmarEliminacion } from '@/utils/eliminacion'
 import { useUiStore } from '@/stores/uiStore'
 
 // Crea la regla de recurrencia (si la hay) y devuelve su id, o null.
@@ -140,13 +141,17 @@ export function useAgenda() {
   }
 
   const eliminarEventoItem = async (id) => {
-    if (!(await ui.confirmar('¿Eliminar este evento?'))) return
-    try { await eliminarEvento(id); cerrarModal(); await recargar() }
+    const evento = eventos.value.find((e) => e.id === id)
+    const decision = await confirmarEliminacion(ui, !!evento?.recurrencia_id, 'este evento', 'la serie de eventos')
+    if (!decision.confirmado) return
+    try { await eliminarEvento(id, decision.serie); cerrarModal(); await recargar() }
     catch (e) { ui.error('No se pudo eliminar el evento') }
   }
   const eliminarTareaItem = async (id) => {
-    if (!(await ui.confirmar('¿Eliminar esta tarea?'))) return
-    try { await eliminarTarea(id); cerrarModal(); await recargar() }
+    const tarea = tareas.value.find((t) => t.id === id)
+    const decision = await confirmarEliminacion(ui, !!tarea?.recurrencia_id, 'esta tarea', 'la serie de tareas')
+    if (!decision.confirmado) return
+    try { await eliminarTarea(id, decision.serie); cerrarModal(); await recargar() }
     catch (e) { ui.error('No se pudo eliminar la tarea') }
   }
   const eliminarNotaItem = async (id) => {

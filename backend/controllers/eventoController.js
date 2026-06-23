@@ -290,12 +290,26 @@ export const eliminarEvento = async (req, res) => {
     try {
         const usuarioId = req.user.id;
         const { id } = req.params;
+        // serie=true elimina todas las ocurrencias que comparten la recurrencia;
+        // por defecto solo elimina este evento de forma aislada.
+        const eliminarSerie = req.query.serie === 'true';
 
         const evento = await EventoModel.obtenerPorId(id, usuarioId);
         if (!evento) {
             return res.status(404).json({
                 success: false,
                 message: 'Evento no encontrado'
+            });
+        }
+
+        // Borrado de toda la serie recurrente
+        if (eliminarSerie && evento.recurrencia_id) {
+            const eliminados = await EventoModel.eliminarSerie(evento.recurrencia_id, usuarioId);
+            await RecurrenciaModel.eliminar(evento.recurrencia_id, usuarioId);
+            return res.json({
+                success: true,
+                message: `Serie eliminada: ${eliminados} eventos`,
+                eliminados
             });
         }
 

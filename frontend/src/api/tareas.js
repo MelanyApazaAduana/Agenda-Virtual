@@ -13,7 +13,9 @@ export const crearTarea = (datos) => api.post('/tareas', datos)
 
 export const actualizarTarea = (id, datos) => api.put(`/tareas/${id}`, datos)
 
-export const eliminarTarea = (id) => api.delete(`/tareas/${id}`)
+// serie=true elimina toda la serie recurrente; por defecto solo esta tarea
+export const eliminarTarea = (id, serie = false) =>
+  api.delete(`/tareas/${id}`, { params: serie ? { serie: true } : {} })
 
 export const cambiarEstadoTarea = (id, estado) =>
   api.patch(`/tareas/${id}/estado`, { estado })

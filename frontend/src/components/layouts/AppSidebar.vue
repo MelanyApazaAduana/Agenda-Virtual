@@ -1,5 +1,11 @@
 <template>
   <aside class="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0 h-full hidden md:flex">
+    <!-- Marca -->
+    <RouterLink to="/calendario" class="flex items-center gap-2.5 px-4 h-14 border-b border-gray-100 shrink-0 hover:opacity-80 transition">
+      <img src="/logo.svg" alt="" class="w-7 h-7 rounded-lg" />
+      <span class="font-bold text-sm tracking-wide text-gray-900">Agenda Virtual</span>
+    </RouterLink>
+
     <div class="flex-1 overflow-y-auto px-3 py-3 space-y-4 custom-scroll">
 
       <!-- Navegación principal (grupos desplegables) -->

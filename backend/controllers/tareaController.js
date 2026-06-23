@@ -194,12 +194,26 @@ export const eliminarTarea = async (req, res) => {
     try {
         const usuarioId = req.user.id;
         const { id } = req.params;
+        // serie=true elimina todas las ocurrencias que comparten la recurrencia;
+        // por defecto solo elimina esta tarea de forma aislada.
+        const eliminarSerie = req.query.serie === 'true';
 
         const tarea = await TareaModel.obtenerPorId(id, usuarioId);
         if (!tarea) {
             return res.status(404).json({
                 success: false,
                 message: 'Tarea no encontrada'
+            });
+        }
+
+        // Borrado de toda la serie recurrente
+        if (eliminarSerie && tarea.recurrencia_id) {
+            const eliminadas = await TareaModel.eliminarSerie(tarea.recurrencia_id, usuarioId);
+            await RecurrenciaModel.eliminar(tarea.recurrencia_id, usuarioId);
+            return res.json({
+                success: true,
+                message: `Serie eliminada: ${eliminadas} tareas`,
+                eliminadas
             });
         }
 

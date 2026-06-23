@@ -99,6 +99,13 @@ class EventoModel {
         return result.affectedRows > 0;
     }
 
+    // Eliminar toda la serie de eventos que comparten una misma recurrencia
+    static async eliminarSerie(recurrenciaId, usuarioId) {
+        const sql = 'DELETE FROM eventos WHERE recurrencia_id = ? AND usuario_id = ?';
+        const [result] = await promisePool.execute(sql, [recurrenciaId, usuarioId]);
+        return result.affectedRows;
+    }
+
     // Cambiar estado de un evento
     static async cambiarEstado(id, usuarioId, nuevoEstado) {
         const estadosPermitidos = ['pendiente', 'en_curso', 'completado', 'cancelado', 'pospuesto', 'vencido'];
