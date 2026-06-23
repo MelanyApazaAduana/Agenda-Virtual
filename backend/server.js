@@ -6,7 +6,7 @@ import cron from 'node-cron';
 
 import passport from './config/passport.js'
 import authRoutes from './routes/authRoutes.js'
-import categoriaRoutes from './routes/categoriaRoutes.js'
+import etiquetaRoutes from './routes/etiquetaRoutes.js'
 import tareaRoutes from './routes/tareaRoutes.js'
 import eventoRoutes from './routes/eventoRoutes.js'
 import ingresoRoutes from './routes/ingresoRoutes.js'
@@ -15,6 +15,8 @@ import EventoModel from './models/EventoModel.js'
 import notaRoutes from './routes/notaRoutes.js'
 import recordatorioRoutes from './routes/recordatorioRoutes.js';
 import gastoRoutes from './routes/gastoRoutes.js';
+import presupuestoRoutes from './routes/presupuestoRoutes.js';
+import recurrenciaRoutes from './routes/recurrenciaRoutes.js';
 
 import calendarioRoutes from './routes/calendarioRoutes.js';
 
@@ -53,7 +55,7 @@ app.use(passport.session())
 // Rutas
 app.use('/auth', authRoutes);
 
-app.use('/categorias', categoriaRoutes);
+app.use('/etiquetas', etiquetaRoutes);
 
 app.use('/eventos', eventoRoutes);
 
@@ -66,6 +68,10 @@ app.use('/notas',notaRoutes);
 app.use('/recordatorios',recordatorioRoutes);
 
 app.use('/gastos',gastoRoutes);
+
+app.use('/presupuestos',presupuestoRoutes);
+
+app.use('/recurrencias',recurrenciaRoutes);
 
 app.use('/calendario',calendarioRoutes);
 

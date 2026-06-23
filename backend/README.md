@@ -40,22 +40,27 @@ backend/
 - No necesitas crear la base de datos a mano antes de arrancar; basta con tener el servidor
   MySQL corriendo y las credenciales correctas en `backend/.env`.
 
-## Modelo de datos
+## Modelo de datos (esquema v3)
 
 | Tabla | Descripción |
 |-------|-------------|
 | `usuarios` | Cuentas (Google OAuth o dev-login). Roles `admin` / `usuario`. |
-| `categorias` | Categorías por usuario, aplicables a evento/tarea/gasto/ingreso/todos. |
-| `elementos` | Generalización común de tareas y eventos (título + categoría). |
-| `eventos` | Eventos del calendario (fecha inicio/fin, ubicación, estado). |
-| `tareas` | Tareas con prioridad, fecha límite, estado y presupuesto asignado. |
-| `notas` | Notas con contenido, audio/imagen, estado y color. |
-| `recordatorios` | Recordatorios asociados a evento/tarea/nota. |
-| `recurrencias` | Reglas de repetición para eventos/tareas. |
-| `ingresos` | Ingresos con fuente, monto, categoría. |
-| `gastos` | Gastos asociados a evento/tarea, con método de pago. |
-| `presupuestos` | Presupuestos por periodo (semanal/mensual). |
-| `historial_productividad` / `racha_productividad` | Métricas de productividad. |
+| `etiquetas` | Etiquetas (tags) por usuario; `color_hex` colorea el chip. |
+| `entidad_etiquetas` | Pivote N:N polimórfico (etiqueta ↔ evento/tarea/ingreso/gasto). |
+| `eventos` | Eventos del calendario (fecha inicio/fin, ubicación, estado, `color_hex`). Tabla autónoma. |
+| `tareas` | Tareas con prioridad, fecha límite, estado y `color_hex`. Tabla autónoma. |
+| `notas` | Notas con contenido, audio/imagen y `color_hex`; pueden colgar de un evento o tarea. |
+| `recordatorios` | Recordatorios para **un** evento **o** una tarea (CHECK exclusivo). |
+| `recurrencias` | Reglas de repetición; referenciadas por `eventos.recurrencia_id` / `tareas.recurrencia_id`. |
+| `ingresos` | Ingresos con fuente y monto; opcionalmente ligados a un presupuesto. |
+| `gastos` | Gastos con método de pago; opcionalmente ligados a una tarea y/o presupuesto. |
+| `presupuestos` | Presupuestos históricos (`monto_total`, `limite_personalizado`); el vigente es el último creado. |
+| `historial_productividad` | Métricas diarias de tareas (creadas/completadas/vencidas). |
+
+**Color de los ítems**: `eventos`, `tareas` y `notas` tienen su propio `color_hex`
+(el backend asigna un color por defecto según el tipo si no se envía: evento azul
+`#3B82F6`, tarea verde `#10B981`, nota ámbar `#F59E0B`). Es independiente del
+`etiquetas.color_hex`, que sólo colorea el chip de la etiqueta.
 
 ## Endpoints
 
@@ -64,14 +69,16 @@ Todas las rutas (salvo `/auth`) requieren sesión autenticada (`verificarAutenti
 | Prefijo | Recurso |
 |---------|---------|
 | `/auth` | Login con Google, callback, verificar sesión, logout, dev-login |
-| `/categorias` | Listar, por tipo, obtener, crear, crear predeterminadas |
+| `/etiquetas` | CRUD, predeterminadas, vincular/desvincular, etiquetas de una entidad, entidades de una etiqueta |
 | `/eventos` | CRUD, cambiar estado, actualización automática de estados |
-| `/tareas` | CRUD, por estado/elemento, vencidas, cambiar estado/prioridad |
-| `/notas` | CRUD, autoguardar, archivar/restaurar, buscar, recientes, resumen |
-| `/recordatorios` | CRUD, marcar leído, posponer, cancelar, pendientes, por entidad |
+| `/tareas` | CRUD, por estado, vencidas, cambiar estado/prioridad |
+| `/notas` | CRUD, autoguardar, por evento/tarea, buscar, recientes, resumen |
+| `/recordatorios` | CRUD, marcar leído, posponer, cancelar, pendientes, por evento/tarea |
 | `/ingresos` | CRUD, resumen, por rango |
-| `/gastos` | CRUD, resumen, reportes (categoría/tipo/método), por rango/mes |
-| `/calendario` | Vista combinada de eventos y tareas |
+| `/gastos` | CRUD, resumen, reporte por método de pago, por tarea/rango/mes |
+| `/presupuestos` | Listar historial, vigente, obtener, crear, eliminar |
+| `/recurrencias` | Listar, obtener, crear, eliminar |
+| `/calendario` | Vista combinada de eventos, tareas y notas |
 | `/api/health` | Health check (estado del servidor y autenticación) |
 
 ### Autenticación (`/auth`)
@@ -97,7 +104,7 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=root123
-DB_NAME=agenda_virtual
+DB_NAME=agenda_virtual_v3
 
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
@@ -130,7 +137,7 @@ El servidor corre en `http://localhost:3000`. Al iniciar, ejecuta `init.sql`
 docker run -d \
   --name agenda_virtual_db \
   -e MYSQL_ROOT_PASSWORD=root123 \
-  -e MYSQL_DATABASE=agenda_virtual \
+  -e MYSQL_DATABASE=agenda_virtual_v3 \
   -p 3306:3306 \
   -v agenda_virtual_data:/var/lib/mysql \
   mysql:8 \
@@ -138,6 +145,6 @@ docker run -d \
 ```
 
 > Las credenciales coinciden con `backend/.env` (`DB_USER=root`, `DB_PASSWORD=root123`,
-> `DB_NAME=agenda_virtual`, `DB_PORT=3306`). No es necesario montar `init.sql` en el
+> `DB_NAME=agenda_virtual_v3`, `DB_PORT=3306`). No es necesario montar `init.sql` en el
 > contenedor: el backend lo ejecuta automáticamente al arrancar. Los flags
 > `--character-set-server` aseguran utf8mb4 también a nivel de servidor.

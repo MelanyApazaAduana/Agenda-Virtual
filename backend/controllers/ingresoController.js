@@ -4,21 +4,20 @@ import IngresoModel from '../models/IngresoModel.js';
 export const listarIngresos = async (req, res) => {
     try {
         const usuarioId = req.user.id;
-        const { anio, mes, fecha_desde, fecha_hasta, categoria_id, evento_id, monto_minimo, monto_maximo } = req.query;
-        
+        const { anio, mes, fecha_desde, fecha_hasta, presupuesto_id, monto_minimo, monto_maximo } = req.query;
+
         const filtros = {
             anio: anio ? parseInt(anio) : null,
             mes: mes ? parseInt(mes) : null,
             fecha_desde: fecha_desde || null,
             fecha_hasta: fecha_hasta || null,
-            categoria_id: categoria_id ? parseInt(categoria_id) : null,
-            evento_id: evento_id ? parseInt(evento_id) : null,
+            presupuesto_id: presupuesto_id ? parseInt(presupuesto_id) : null,
             monto_minimo: monto_minimo ? parseFloat(monto_minimo) : null,
             monto_maximo: monto_maximo ? parseFloat(monto_maximo) : null
         };
 
         const ingresos = await IngresoModel.listarPorUsuario(usuarioId, filtros);
-        
+
         res.json({
             success: true,
             data: ingresos,
@@ -66,9 +65,8 @@ export const obtenerIngreso = async (req, res) => {
 export const crearIngreso = async (req, res) => {
     try {
         const usuarioId = req.user.id;
-        const { monto, fuente, categoria_id, fecha, detalle, evento_id } = req.body;
+        const { monto, fuente, presupuesto_id, fecha, detalle } = req.body;
 
-        // Validaciones básicas
         if (!monto || monto <= 0) {
             return res.status(400).json({
                 success: false,
@@ -86,10 +84,9 @@ export const crearIngreso = async (req, res) => {
         const nuevoIngreso = await IngresoModel.crear(usuarioId, {
             monto,
             fuente,
-            categoria_id,
+            presupuesto_id,
             fecha,
-            detalle,
-            evento_id
+            detalle
         });
 
         res.status(201).json({
@@ -173,16 +170,10 @@ export const obtenerResumenIngresos = async (req, res) => {
         }
 
         const resumen = await IngresoModel.obtenerResumen(usuarioId, parseInt(anio), parseInt(mes));
-        const porCategoria = await IngresoModel.obtenerPorCategoria(usuarioId, parseInt(anio), parseInt(mes));
-        const porEvento = await IngresoModel.obtenerPorEvento(usuarioId, parseInt(anio), parseInt(mes));
 
         res.json({
             success: true,
-            data: {
-                resumen,
-                por_categoria: porCategoria,
-                por_evento: porEvento
-            }
+            data: { resumen }
         });
     } catch (error) {
         console.error('Error al obtener resumen de ingresos:', error);

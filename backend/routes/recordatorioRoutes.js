@@ -8,12 +8,12 @@ import {
     posponerRecordatorio,
     cancelarRecordatorio,
     eliminarRecordatorio,
-    listarRecordatoriosPorEntidad,
+    listarRecordatoriosPorEvento,
+    listarRecordatoriosPorTarea,
     obtenerRecordatoriosPendientes,
     listarRecordatoriosPorRango,
     obtenerResumenRecordatorios,
-    limpiarRecordatoriosViejos,
-    verificarRecordatorioExistente
+    limpiarRecordatoriosViejos
 } from '../controllers/recordatorioController.js';
 import { verificarAutenticacion } from '../middleware/auth.js';
 
@@ -25,8 +25,13 @@ router.get('/', listarRecordatorios);
 router.get('/resumen', obtenerResumenRecordatorios);
 router.get('/rango', listarRecordatoriosPorRango);
 router.get('/pendientes', obtenerRecordatoriosPendientes);
-router.get('/:id', obtenerRecordatorio);
 
+router.get('/evento/:evento_id', listarRecordatoriosPorEvento);
+router.get('/tarea/:tarea_id', listarRecordatoriosPorTarea);
+
+router.delete('/limpiar/viejos', limpiarRecordatoriosViejos);
+
+router.get('/:id', obtenerRecordatorio);
 router.post('/', crearRecordatorio);
 router.put('/:id', actualizarRecordatorio);
 
@@ -35,9 +40,5 @@ router.patch('/:id/posponer', posponerRecordatorio);
 router.patch('/:id/cancelar', cancelarRecordatorio);
 
 router.delete('/:id', eliminarRecordatorio);
-router.delete('/limpiar/viejos', limpiarRecordatoriosViejos);
-
-router.get('/entidad/:tipo_entidad/:entidad_id', listarRecordatoriosPorEntidad);
-router.get('/entidad/:tipo_entidad/:entidad_id/existe', verificarRecordatorioExistente);
 
 export default router;

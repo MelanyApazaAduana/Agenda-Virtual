@@ -4,11 +4,10 @@ import GastoModel from '../models/GastoModel.js';
 export const listarGastos = async (req, res) => {
     try {
         const usuarioId = req.user.id;
-        const { 
-            tipo_entidad, 
-            entidad_id, 
-            categoria_id, 
-            fecha_desde, 
+        const {
+            tarea_id,
+            presupuesto_id,
+            fecha_desde,
             fecha_hasta,
             metodo_pago,
             monto_minimo,
@@ -19,9 +18,8 @@ export const listarGastos = async (req, res) => {
         } = req.query;
 
         const filtros = {
-            tipo_entidad: tipo_entidad || null,
-            entidad_id: entidad_id ? parseInt(entidad_id) : null,
-            categoria_id: categoria_id ? parseInt(categoria_id) : null,
+            tarea_id: tarea_id ? parseInt(tarea_id) : null,
+            presupuesto_id: presupuesto_id ? parseInt(presupuesto_id) : null,
             fecha_desde: fecha_desde || null,
             fecha_hasta: fecha_hasta || null,
             metodo_pago: metodo_pago || null,
@@ -82,12 +80,8 @@ export const obtenerGasto = async (req, res) => {
 export const crearGasto = async (req, res) => {
     try {
         const usuarioId = req.user.id;
-        const { tipo_entidad, entidad_id, monto, fecha, categoria_id, metodo_pago } = req.body;
+        const { presupuesto_id, tarea_id, monto, fecha, metodo_pago } = req.body;
 
-        // tipo_entidad por defecto 'general' (gasto no asociado a evento/tarea)
-        const tipoEntidadFinal = tipo_entidad || 'general';
-
-        // Validaciones de entrada
         if (!monto || monto <= 0) {
             return res.status(400).json({
                 success: false,
@@ -96,11 +90,10 @@ export const crearGasto = async (req, res) => {
         }
 
         const nuevoGasto = await GastoModel.crear(usuarioId, {
-            tipo_entidad: tipoEntidadFinal,
-            entidad_id,
+            presupuesto_id,
+            tarea_id,
             monto,
             fecha,
-            categoria_id,
             metodo_pago
         });
 
@@ -124,9 +117,8 @@ export const actualizarGasto = async (req, res) => {
     try {
         const usuarioId = req.user.id;
         const { id } = req.params;
-        const { monto, fecha, categoria_id, metodo_pago, tipo_entidad, entidad_id } = req.body;
+        const { monto, fecha, metodo_pago, presupuesto_id, tarea_id } = req.body;
 
-        // Verificar que el gasto existe
         const gastoExistente = await GastoModel.obtenerPorId(id, usuarioId);
         if (!gastoExistente) {
             return res.status(404).json({
@@ -135,7 +127,6 @@ export const actualizarGasto = async (req, res) => {
             });
         }
 
-        // Validar monto si viene
         if (monto !== undefined && monto <= 0) {
             return res.status(400).json({
                 success: false,
@@ -146,10 +137,9 @@ export const actualizarGasto = async (req, res) => {
         const gastoActualizado = await GastoModel.actualizar(id, usuarioId, {
             monto,
             fecha,
-            categoria_id,
             metodo_pago,
-            tipo_entidad,
-            entidad_id
+            presupuesto_id,
+            tarea_id
         });
 
         res.json({
@@ -195,44 +185,32 @@ export const eliminarGasto = async (req, res) => {
     }
 };
 
-// Obtener gastos por entidad (evento/tarea)
-export const listarGastosPorEntidad = async (req, res) => {
+// Obtener gastos asociados a una tarea
+export const listarGastosPorTarea = async (req, res) => {
     try {
         const usuarioId = req.user.id;
-        const { tipo_entidad, entidad_id } = req.params;
+        const { tarea_id } = req.params;
 
-        if (!tipo_entidad || !['evento', 'tarea'].includes(tipo_entidad)) {
+        if (!tarea_id) {
             return res.status(400).json({
                 success: false,
-                mensaje: 'Tipo de entidad no válido. Debe ser: evento o tarea'
+                mensaje: 'El ID de la tarea es requerido'
             });
         }
 
-        if (!entidad_id) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'El ID de la entidad es requerido'
-            });
-        }
-
-        const gastos = await GastoModel.listarPorEntidad(
-            usuarioId, 
-            tipo_entidad, 
-            parseInt(entidad_id)
-        );
+        const gastos = await GastoModel.listarPorTarea(usuarioId, parseInt(tarea_id));
 
         res.json({
             success: true,
             data: gastos,
             total: gastos.length,
-            tipo_entidad,
-            entidad_id
+            tarea_id
         });
     } catch (error) {
-        console.error('Error al listar gastos por entidad:', error);
+        console.error('Error al listar gastos por tarea:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al listar los gastos de la entidad',
+            mensaje: 'Error al listar los gastos de la tarea',
             error: error.message
         });
     }
@@ -251,11 +229,7 @@ export const listarGastosPorRango = async (req, res) => {
             });
         }
 
-        const gastos = await GastoModel.listarPorRango(
-            usuarioId,
-            fecha_inicio,
-            fecha_fin
-        );
+        const gastos = await GastoModel.listarPorRango(usuarioId, fecha_inicio, fecha_fin);
 
         res.json({
             success: true,
@@ -278,25 +252,21 @@ export const listarGastosPorRango = async (req, res) => {
 export const listarGastosPorMes = async (req, res) => {
     try {
         const usuarioId = req.user.id;
-        const { año, mes } = req.params;
+        const { anio, mes } = req.params;
 
-        if (!año || !mes) {
+        if (!anio || !mes) {
             return res.status(400).json({
                 success: false,
                 mensaje: 'Se requieren año y mes'
             });
         }
 
-        const gastos = await GastoModel.obtenerPorMes(
-            usuarioId,
-            parseInt(año),
-            parseInt(mes)
-        );
+        const gastos = await GastoModel.obtenerPorMes(usuarioId, parseInt(anio), parseInt(mes));
 
         const total = await GastoModel.obtenerTotal(
             usuarioId,
-            `${año}-${String(mes).padStart(2, '0')}-01`,
-            `${año}-${String(mes).padStart(2, '0')}-${new Date(año, mes, 0).getDate()}`
+            `${anio}-${String(mes).padStart(2, '0')}-01`,
+            `${anio}-${String(mes).padStart(2, '0')}-${new Date(anio, mes, 0).getDate()}`
         );
 
         res.json({
@@ -305,7 +275,7 @@ export const listarGastosPorMes = async (req, res) => {
                 gastos,
                 total,
                 mes: parseInt(mes),
-                año: parseInt(año)
+                anio: parseInt(anio)
             }
         });
     } catch (error) {
@@ -333,8 +303,6 @@ export const obtenerResumenGastos = async (req, res) => {
 
         const resumen = await GastoModel.obtenerResumen(usuarioId, fecha_inicio, fecha_fin);
         const total = await GastoModel.obtenerTotal(usuarioId, fecha_inicio, fecha_fin);
-        const porCategoria = await GastoModel.obtenerPorCategoria(usuarioId, fecha_inicio, fecha_fin);
-        const porTipoEntidad = await GastoModel.obtenerPorTipoEntidad(usuarioId, fecha_inicio, fecha_fin);
         const porMetodoPago = await GastoModel.obtenerPorMetodoPago(usuarioId, fecha_inicio, fecha_fin);
 
         res.json({
@@ -342,8 +310,6 @@ export const obtenerResumenGastos = async (req, res) => {
             data: {
                 resumen,
                 total,
-                por_categoria: porCategoria,
-                por_tipo_entidad: porTipoEntidad,
                 por_metodo_pago: porMetodoPago
             }
         });
@@ -352,64 +318,6 @@ export const obtenerResumenGastos = async (req, res) => {
         res.status(500).json({
             success: false,
             mensaje: 'Error al obtener el resumen de gastos',
-            error: error.message
-        });
-    }
-};
-
-// Obtener gastos agrupados por categoría
-export const obtenerGastosPorCategoria = async (req, res) => {
-    try {
-        const usuarioId = req.user.id;
-        const { fecha_inicio, fecha_fin } = req.query;
-
-        if (!fecha_inicio || !fecha_fin) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'Se requieren fecha_inicio y fecha_fin'
-            });
-        }
-
-        const porCategoria = await GastoModel.obtenerPorCategoria(usuarioId, fecha_inicio, fecha_fin);
-
-        res.json({
-            success: true,
-            data: porCategoria
-        });
-    } catch (error) {
-        console.error('Error al obtener gastos por categoría:', error);
-        res.status(500).json({
-            success: false,
-            mensaje: 'Error al obtener los gastos por categoría',
-            error: error.message
-        });
-    }
-};
-
-// Obtener gastos agrupados por tipo de entidad
-export const obtenerGastosPorTipoEntidad = async (req, res) => {
-    try {
-        const usuarioId = req.user.id;
-        const { fecha_inicio, fecha_fin } = req.query;
-
-        if (!fecha_inicio || !fecha_fin) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'Se requieren fecha_inicio y fecha_fin'
-            });
-        }
-
-        const porTipoEntidad = await GastoModel.obtenerPorTipoEntidad(usuarioId, fecha_inicio, fecha_fin);
-
-        res.json({
-            success: true,
-            data: porTipoEntidad
-        });
-    } catch (error) {
-        console.error('Error al obtener gastos por tipo de entidad:', error);
-        res.status(500).json({
-            success: false,
-            mensaje: 'Error al obtener los gastos por tipo de entidad',
             error: error.message
         });
     }

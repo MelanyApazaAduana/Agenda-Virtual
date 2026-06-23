@@ -1,93 +1,70 @@
 import promisePool from '../config/database.js';
 
 class GastoModel {
+    // Validar que la tarea pertenezca al usuario
+    static async validarTarea(usuarioId, tareaId) {
+        const [rows] = await promisePool.execute(
+            'SELECT id FROM tareas WHERE id = ? AND usuario_id = ?',
+            [tareaId, usuarioId]
+        );
+        if (rows.length === 0) {
+            throw new Error('La tarea especificada no existe o no pertenece al usuario');
+        }
+        return true;
+    }
+
+    // Validar que el presupuesto pertenezca al usuario
+    static async validarPresupuesto(usuarioId, presupuestoId) {
+        const [rows] = await promisePool.execute(
+            'SELECT id FROM presupuestos WHERE id = ? AND usuario_id = ?',
+            [presupuestoId, usuarioId]
+        );
+        if (rows.length === 0) {
+            throw new Error('El presupuesto especificado no existe o no pertenece al usuario');
+        }
+        return true;
+    }
+
     // Crear un nuevo gasto
     static async crear(usuarioId, datos) {
-        const { tipo_entidad, entidad_id, monto, fecha, categoria_id, metodo_pago } = datos;
-
-        // Validaciones básicas
-        if (!tipo_entidad || !['evento', 'tarea', 'general'].includes(tipo_entidad)) {
-            throw new Error('Tipo de entidad no válido. Debe ser: evento, tarea o general');
-        }
+        const { presupuesto_id, tarea_id, monto, fecha, metodo_pago } = datos;
 
         if (!monto || monto <= 0) {
             throw new Error('El monto debe ser mayor a 0');
         }
 
-        // Validar que la entidad exista y pertenezca al usuario (solo si está asociada)
-        if (entidad_id && tipo_entidad !== 'general') {
-            await this.validarEntidad(usuarioId, tipo_entidad, entidad_id);
+        if (tarea_id) {
+            await this.validarTarea(usuarioId, tarea_id);
         }
-
-        // Validar que la categoría pertenezca al usuario y sea de tipo gasto o todos
-        if (categoria_id) {
-            const [categoria] = await promisePool.execute(
-                'SELECT id FROM categorias WHERE id = ? AND usuario_id = ? AND tipo_aplicable IN (?, ?)',
-                [categoria_id, usuarioId, 'gasto', 'todos']
-            );
-            if (categoria.length === 0) {
-                throw new Error('La categoría especificada no es válida para gastos');
-            }
+        if (presupuesto_id) {
+            await this.validarPresupuesto(usuarioId, presupuesto_id);
         }
 
         const montoFinal = Math.abs(parseFloat(monto));
         const fechaFinal = fecha || new Date();
 
         const sql = `
-            INSERT INTO gastos (usuario_id, tipo_entidad, entidad_id, monto, fecha, categoria_id, metodo_pago)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO gastos (usuario_id, presupuesto_id, tarea_id, monto, fecha, metodo_pago)
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
         const [result] = await promisePool.execute(sql, [
             usuarioId,
-            tipo_entidad,
-            entidad_id || null,
+            presupuesto_id || null,
+            tarea_id || null,
             montoFinal,
             fechaFinal,
-            categoria_id || null,
             metodo_pago || null
         ]);
 
         return await this.obtenerPorId(result.insertId, usuarioId);
     }
 
-    // Validar que la entidad exista y pertenezca al usuario
-    static async validarEntidad(usuarioId, tipo_entidad, entidad_id) {
-        let query;
-        if (tipo_entidad === 'evento') {
-            query = `
-                SELECT e.id
-                FROM eventos e
-                INNER JOIN elementos el ON e.elemento_id = el.id
-                WHERE e.id = ? AND el.usuario_id = ?
-            `;
-        } else if (tipo_entidad === 'tarea') {
-            query = `
-                SELECT t.id
-                FROM tareas t
-                INNER JOIN elementos el ON t.elemento_id = el.id
-                WHERE t.id = ? AND el.usuario_id = ?
-            `;
-        }
-
-        const [rows] = await promisePool.execute(query, [entidad_id, usuarioId]);
-        if (rows.length === 0) {
-            throw new Error(`El ${tipo_entidad} especificado no existe o no pertenece al usuario`);
-        }
-        return true;
-    }
-
-    // Obtener un gasto por ID
+    // Obtener un gasto por ID (con el título de la tarea asociada, si la hay)
     static async obtenerPorId(id, usuarioId) {
         const sql = `
-            SELECT g.*, 
-                   c.nombre as categoria_nombre, 
-                   c.color_hex as categoria_color,
-                   CASE 
-                       WHEN g.tipo_entidad = 'evento' THEN (SELECT el.titulo FROM elementos el INNER JOIN eventos e ON el.id = e.elemento_id WHERE e.id = g.entidad_id)
-                       WHEN g.tipo_entidad = 'tarea' THEN (SELECT el.titulo FROM elementos el INNER JOIN tareas t ON el.id = t.elemento_id WHERE t.id = g.entidad_id)
-                   END as entidad_titulo
+            SELECT g.*, t.titulo as tarea_titulo
             FROM gastos g
-            LEFT JOIN categorias c ON g.categoria_id = c.id
+            LEFT JOIN tareas t ON g.tarea_id = t.id
             WHERE g.id = ? AND g.usuario_id = ?
         `;
         const [rows] = await promisePool.execute(sql, [id, usuarioId]);
@@ -97,35 +74,23 @@ class GastoModel {
     // Obtener todos los gastos de un usuario
     static async listarPorUsuario(usuarioId, filtros = {}) {
         let sql = `
-            SELECT g.*, 
-                   c.nombre as categoria_nombre, 
-                   c.color_hex as categoria_color,
-                   CASE 
-                       WHEN g.tipo_entidad = 'evento' THEN (SELECT el.titulo FROM elementos el INNER JOIN eventos e ON el.id = e.elemento_id WHERE e.id = g.entidad_id)
-                       WHEN g.tipo_entidad = 'tarea' THEN (SELECT el.titulo FROM elementos el INNER JOIN tareas t ON el.id = t.elemento_id WHERE t.id = g.entidad_id)
-                   END as entidad_titulo
+            SELECT g.*, t.titulo as tarea_titulo
             FROM gastos g
-            LEFT JOIN categorias c ON g.categoria_id = c.id
+            LEFT JOIN tareas t ON g.tarea_id = t.id
             WHERE g.usuario_id = ?
         `;
         const params = [usuarioId];
 
-        // Filtro por tipo de entidad
-        if (filtros.tipo_entidad && ['evento', 'tarea'].includes(filtros.tipo_entidad)) {
-            sql += ` AND g.tipo_entidad = ?`;
-            params.push(filtros.tipo_entidad);
+        // Filtro por tarea
+        if (filtros.tarea_id) {
+            sql += ` AND g.tarea_id = ?`;
+            params.push(filtros.tarea_id);
         }
 
-        // Filtro por entidad_id
-        if (filtros.entidad_id) {
-            sql += ` AND g.entidad_id = ?`;
-            params.push(filtros.entidad_id);
-        }
-
-        // Filtro por categoría
-        if (filtros.categoria_id) {
-            sql += ` AND g.categoria_id = ?`;
-            params.push(filtros.categoria_id);
+        // Filtro por presupuesto
+        if (filtros.presupuesto_id) {
+            sql += ` AND g.presupuesto_id = ?`;
+            params.push(filtros.presupuesto_id);
         }
 
         // Filtro por fecha (desde)
@@ -159,11 +124,10 @@ class GastoModel {
         }
 
         // Ordenamiento
-        const orden = filtros.orden || 'fecha';
-        const direccion = filtros.direccion || 'DESC';
-        const ordenesPermitidos = ['fecha', 'monto', 'creado_en', 'tipo_entidad'];
-        const ordenFinal = ordenesPermitidos.includes(orden) ? orden : 'fecha';
-        sql += ` ORDER BY g.${ordenFinal} ${direccion === 'ASC' ? 'ASC' : 'DESC'}`;
+        const direccion = filtros.direccion === 'ASC' ? 'ASC' : 'DESC';
+        const ordenesPermitidos = ['fecha', 'monto', 'creado_en'];
+        const ordenFinal = ordenesPermitidos.includes(filtros.orden) ? filtros.orden : 'fecha';
+        sql += ` ORDER BY g.${ordenFinal} ${direccion}`;
 
         // Límite
         if (filtros.limite) {
@@ -182,52 +146,37 @@ class GastoModel {
             throw new Error('Gasto no encontrado o no pertenece al usuario');
         }
 
-        const { monto, fecha, categoria_id, metodo_pago, tipo_entidad, entidad_id } = datos;
+        const { monto, fecha, metodo_pago, presupuesto_id, tarea_id } = datos;
 
-        // Validar monto si viene
-        if (monto !== undefined) {
-            if (monto <= 0) {
-                throw new Error('El monto debe ser mayor a 0');
-            }
+        if (monto !== undefined && monto <= 0) {
+            throw new Error('El monto debe ser mayor a 0');
         }
 
-        // Validar categoría si viene
-        if (categoria_id !== undefined && categoria_id) {
-            const [categoria] = await promisePool.execute(
-                'SELECT id FROM categorias WHERE id = ? AND usuario_id = ? AND tipo_aplicable IN (?, ?)',
-                [categoria_id, usuarioId, 'gasto', 'todos']
-            );
-            if (categoria.length === 0) {
-                throw new Error('La categoría especificada no es válida para gastos');
-            }
+        if (tarea_id !== undefined && tarea_id) {
+            await this.validarTarea(usuarioId, tarea_id);
+        }
+        if (presupuesto_id !== undefined && presupuesto_id) {
+            await this.validarPresupuesto(usuarioId, presupuesto_id);
         }
 
-        // Validar entidad si viene
-        if (entidad_id !== undefined && entidad_id) {
-            const tipoFinal = tipo_entidad || gastoExistente.tipo_entidad;
-            await this.validarEntidad(usuarioId, tipoFinal, entidad_id);
-        }
-
-        const montoFinal = monto !== undefined ? Math.abs(parseFloat(monto)) : undefined;
+        const montoFinal = monto !== undefined ? Math.abs(parseFloat(monto)) : null;
 
         const sql = `
-            UPDATE gastos 
+            UPDATE gastos
             SET monto = COALESCE(?, monto),
                 fecha = COALESCE(?, fecha),
-                categoria_id = ?,
                 metodo_pago = ?,
-                tipo_entidad = COALESCE(?, tipo_entidad),
-                entidad_id = ?
+                presupuesto_id = ?,
+                tarea_id = ?
             WHERE id = ? AND usuario_id = ?
         `;
 
         const [result] = await promisePool.execute(sql, [
             montoFinal,
-            fecha || undefined,
-            categoria_id !== undefined ? (categoria_id || null) : undefined,
-            metodo_pago !== undefined ? (metodo_pago || null) : undefined,
-            tipo_entidad || undefined,
-            entidad_id !== undefined ? (entidad_id || null) : undefined,
+            fecha !== undefined ? fecha : null,
+            metodo_pago !== undefined ? (metodo_pago || null) : gastoExistente.metodo_pago,
+            presupuesto_id !== undefined ? (presupuesto_id || null) : gastoExistente.presupuesto_id,
+            tarea_id !== undefined ? (tarea_id || null) : gastoExistente.tarea_id,
             id,
             usuarioId
         ]);
@@ -246,12 +195,9 @@ class GastoModel {
         return result.affectedRows > 0;
     }
 
-    // Obtener gastos por entidad (evento/tarea)
-    static async listarPorEntidad(usuarioId, tipo_entidad, entidad_id) {
-        return await this.listarPorUsuario(usuarioId, {
-            tipo_entidad,
-            entidad_id
-        });
+    // Obtener gastos asociados a una tarea
+    static async listarPorTarea(usuarioId, tareaId) {
+        return await this.listarPorUsuario(usuarioId, { tarea_id: tareaId });
     }
 
     // Obtener gastos por rango de fechas
@@ -265,14 +211,13 @@ class GastoModel {
     // Obtener resumen de gastos por período
     static async obtenerResumen(usuarioId, fechaInicio, fechaFin) {
         const sql = `
-            SELECT 
+            SELECT
                 COUNT(*) as total_gastos,
                 SUM(monto) as monto_total,
                 AVG(monto) as monto_promedio,
                 MIN(monto) as monto_minimo,
                 MAX(monto) as monto_maximo,
-                COUNT(DISTINCT categoria_id) as categorias_utilizadas,
-                COUNT(DISTINCT entidad_id) as entidades_con_gastos
+                COUNT(DISTINCT tarea_id) as tareas_con_gastos
             FROM gastos
             WHERE usuario_id = ? AND DATE(fecha) BETWEEN ? AND ?
         `;
@@ -280,52 +225,15 @@ class GastoModel {
         return rows[0];
     }
 
-    // Obtener gastos agrupados por categoría
-    static async obtenerPorCategoria(usuarioId, fechaInicio, fechaFin) {
-        const sql = `
-            SELECT 
-                c.id as categoria_id,
-                c.nombre as categoria_nombre,
-                c.color_hex as categoria_color,
-                COUNT(g.id) as cantidad,
-                SUM(g.monto) as monto_total,
-                AVG(g.monto) as monto_promedio
-            FROM gastos g
-            LEFT JOIN categorias c ON g.categoria_id = c.id
-            WHERE g.usuario_id = ? AND DATE(g.fecha) BETWEEN ? AND ?
-            GROUP BY g.categoria_id
-            ORDER BY monto_total DESC
-        `;
-        const [rows] = await promisePool.execute(sql, [usuarioId, fechaInicio, fechaFin]);
-        return rows;
-    }
-
-    // Obtener gastos agrupados por tipo de entidad
-    static async obtenerPorTipoEntidad(usuarioId, fechaInicio, fechaFin) {
-        const sql = `
-            SELECT 
-                tipo_entidad,
-                COUNT(*) as cantidad,
-                SUM(monto) as monto_total,
-                AVG(monto) as monto_promedio
-            FROM gastos
-            WHERE usuario_id = ? AND DATE(fecha) BETWEEN ? AND ?
-            GROUP BY tipo_entidad
-            ORDER BY monto_total DESC
-        `;
-        const [rows] = await promisePool.execute(sql, [usuarioId, fechaInicio, fechaFin]);
-        return rows;
-    }
-
     // Obtener gastos agrupados por método de pago
     static async obtenerPorMetodoPago(usuarioId, fechaInicio, fechaFin) {
         const sql = `
-            SELECT 
+            SELECT
                 metodo_pago,
                 COUNT(*) as cantidad,
                 SUM(monto) as monto_total
             FROM gastos
-            WHERE usuario_id = ? 
+            WHERE usuario_id = ?
                 AND DATE(fecha) BETWEEN ? AND ?
                 AND metodo_pago IS NOT NULL
             GROUP BY metodo_pago
@@ -347,9 +255,9 @@ class GastoModel {
     }
 
     // Obtener gastos por mes
-    static async obtenerPorMes(usuarioId, año, mes) {
-        const fechaInicio = `${año}-${String(mes).padStart(2, '0')}-01`;
-        const fechaFin = `${año}-${String(mes).padStart(2, '0')}-${new Date(año, mes, 0).getDate()}`;
+    static async obtenerPorMes(usuarioId, anio, mes) {
+        const fechaInicio = `${anio}-${String(mes).padStart(2, '0')}-01`;
+        const fechaFin = `${anio}-${String(mes).padStart(2, '0')}-${new Date(anio, mes, 0).getDate()}`;
         return await this.listarPorUsuario(usuarioId, {
             fecha_desde: fechaInicio,
             fecha_hasta: fechaFin
@@ -361,23 +269,6 @@ class GastoModel {
         const sql = 'SELECT id FROM gastos WHERE id = ? AND usuario_id = ?';
         const [rows] = await promisePool.execute(sql, [id, usuarioId]);
         return rows.length > 0;
-    }
-
-    // Contar gastos por categoría
-    static async contarPorCategoria(usuarioId, fechaInicio, fechaFin) {
-        const sql = `
-            SELECT 
-                c.id as categoria_id,
-                c.nombre as categoria_nombre,
-                COUNT(g.id) as cantidad
-            FROM gastos g
-            LEFT JOIN categorias c ON g.categoria_id = c.id
-            WHERE g.usuario_id = ? AND DATE(g.fecha) BETWEEN ? AND ?
-            GROUP BY g.categoria_id
-            ORDER BY cantidad DESC
-        `;
-        const [rows] = await promisePool.execute(sql, [usuarioId, fechaInicio, fechaFin]);
-        return rows;
     }
 }
 

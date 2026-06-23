@@ -1,47 +1,32 @@
 import promisePool from '../config/database.js';
 
 class EventoModel {
-    // Crear un nuevo evento (requiere que el elemento ya exista)
-    static async crear({ elemento_id, descripcion, fecha_inicio, fecha_fin, ubicacion, color_etiqueta, estado, instancia_id }) {
+    // Crear un nuevo evento (tabla autonoma, sin elementos)
+    static async crear({ usuario_id, titulo, descripcion, fecha_inicio, fecha_fin, ubicacion, color_hex, estado, recurrencia_id }) {
         const sql = `
-            INSERT INTO eventos (elemento_id, descripcion, fecha_inicio, fecha_fin, ubicacion, color_etiqueta, estado, instancia_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO eventos (usuario_id, titulo, descripcion, fecha_inicio, fecha_fin, ubicacion, color_hex, estado, recurrencia_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const [result] = await promisePool.execute(sql, [
-            elemento_id,
+            usuario_id,
+            titulo,
             descripcion || null,
             fecha_inicio,
             fecha_fin,
             ubicacion || null,
-            color_etiqueta || null,
+            color_hex || null,
             estado || 'pendiente',
-            instancia_id || null
+            recurrencia_id || null
         ]);
-        
-        return {
-            id: result.insertId,
-            elemento_id,
-            descripcion: descripcion || null,
-            fecha_inicio,
-            fecha_fin,
-            ubicacion: ubicacion || null,
-            color_etiqueta: color_etiqueta || null,
-            estado: estado || 'pendiente',
-            instancia_id: instancia_id || null,
-            creado_en: new Date()
-        };
+
+        return await this.obtenerPorId(result.insertId, usuario_id);
     }
 
-    // Obtener un evento por id 
+    // Obtener un evento por id
     static async obtenerPorId(id, usuarioId) {
         const sql = `
-            SELECT e.*, 
-                   el.titulo, el.categoria_id, el.usuario_id,
-                   c.nombre as categoria_nombre, c.color_hex as categoria_color
-            FROM eventos e
-            INNER JOIN elementos el ON e.elemento_id = el.id
-            LEFT JOIN categorias c ON el.categoria_id = c.id
-            WHERE e.id = ? AND el.usuario_id = ?
+            SELECT * FROM eventos
+            WHERE id = ? AND usuario_id = ?
         `;
         const [rows] = await promisePool.execute(sql, [id, usuarioId]);
         return rows[0] || null;
@@ -49,101 +34,68 @@ class EventoModel {
 
     // Listar todos los eventos de un usuario (con filtros opcionales)
     static async listarPorUsuario(usuarioId, filtros = {}) {
-        let sql = `
-            SELECT e.*, 
-                   el.titulo, el.categoria_id,
-                   c.nombre as categoria_nombre, c.color_hex as categoria_color
-            FROM eventos e
-            INNER JOIN elementos el ON e.elemento_id = el.id
-            LEFT JOIN categorias c ON el.categoria_id = c.id
-            WHERE el.usuario_id = ?
-        `;
+        let sql = `SELECT * FROM eventos WHERE usuario_id = ?`;
         const params = [usuarioId];
-        
+
         // Filtro por rango de fechas
         if (filtros.fecha_inicio && filtros.fecha_fin) {
-            sql += ` AND e.fecha_inicio BETWEEN ? AND ?`;
+            sql += ` AND fecha_inicio BETWEEN ? AND ?`;
             params.push(filtros.fecha_inicio, filtros.fecha_fin);
         } else if (filtros.fecha_inicio) {
-            sql += ` AND DATE(e.fecha_inicio) = ?`;
+            sql += ` AND DATE(fecha_inicio) = ?`;
             params.push(filtros.fecha_inicio);
         }
-        
+
         // Filtro por estado
         if (filtros.estado) {
-            sql += ` AND e.estado = ?`;
+            sql += ` AND estado = ?`;
             params.push(filtros.estado);
         }
-        
-        // Filtro por categoría
-        if (filtros.categoria_id) {
-            sql += ` AND el.categoria_id = ?`;
-            params.push(filtros.categoria_id);
-        }
-        
-        sql += ` ORDER BY e.fecha_inicio ASC`;
-        
+
+        sql += ` ORDER BY fecha_inicio ASC`;
+
         const [rows] = await promisePool.execute(sql, params);
         return rows;
     }
 
     // Actualizar evento
-    static async actualizar(id, usuarioId, { descripcion, fecha_inicio, fecha_fin, ubicacion, color_etiqueta, estado, instancia_id }) {
-        // Primero verificar que el evento pertenece al usuario
+    static async actualizar(id, usuarioId, { titulo, descripcion, fecha_inicio, fecha_fin, ubicacion, color_hex, estado, recurrencia_id }) {
         const eventoActual = await this.obtenerPorId(id, usuarioId);
         if (!eventoActual) {
             return false;
         }
-        
+
         const sql = `
-            UPDATE eventos 
-            SET descripcion = ?, 
-                fecha_inicio = ?, 
-                fecha_fin = ?, 
-                ubicacion = ?, 
-                color_etiqueta = ?, 
-                estado = ?, 
-                instancia_id = ?
-            WHERE id = ?
+            UPDATE eventos
+            SET titulo = ?,
+                descripcion = ?,
+                fecha_inicio = ?,
+                fecha_fin = ?,
+                ubicacion = ?,
+                color_hex = ?,
+                estado = ?,
+                recurrencia_id = ?
+            WHERE id = ? AND usuario_id = ?
         `;
         const [result] = await promisePool.execute(sql, [
+            titulo !== undefined ? titulo : eventoActual.titulo,
             descripcion !== undefined ? descripcion : eventoActual.descripcion,
             fecha_inicio || eventoActual.fecha_inicio,
             fecha_fin || eventoActual.fecha_fin,
             ubicacion !== undefined ? ubicacion : eventoActual.ubicacion,
-            color_etiqueta !== undefined ? color_etiqueta : eventoActual.color_etiqueta,
+            color_hex !== undefined ? color_hex : eventoActual.color_hex,
             estado || eventoActual.estado,
-            instancia_id !== undefined ? instancia_id : eventoActual.instancia_id,
-            id
+            recurrencia_id !== undefined ? recurrencia_id : eventoActual.recurrencia_id,
+            id,
+            usuarioId
         ]);
         return result.affectedRows > 0;
     }
 
-    // Eliminar evento (solo elimina el evento, no el elemento)
-    // static async eliminar(id, usuarioId) {
-    //     // Verificar que el evento pertenece al usuario
-    //     const evento = await this.obtenerPorId(id, usuarioId);
-    //     if (!evento) {
-    //         return false;
-    //     }
-        
-    //     const sql = 'DELETE FROM eventos WHERE id = ?';
-    //     const [result] = await promisePool.execute(sql, [id]);
-    //     return result.affectedRows > 0;
-    // }
-
-    // Eliminar evento y su elemento base cascada 
-    static async eliminarCompleto(id, usuarioId) {
-        // Obtener el evento para saber el elemento_id
-        const evento = await this.obtenerPorId(id, usuarioId);
-        if (!evento) {
-            return false;
-        }
-        
-        // Eliminar el elemento; el evento se borra en cascada por la FK
-        // (eventos.elemento_id REFERENCES elementos ON DELETE CASCADE)
-        const sql = 'DELETE FROM elementos WHERE id = ? AND usuario_id = ?';
-        const [result] = await promisePool.execute(sql, [evento.elemento_id, usuarioId]);
+    // Eliminar evento (en cascada se borran sus recordatorios; las notas quedan sueltas)
+    static async eliminar(id, usuarioId) {
+        const sql = 'DELETE FROM eventos WHERE id = ? AND usuario_id = ?';
+        const [result] = await promisePool.execute(sql, [id, usuarioId]);
         return result.affectedRows > 0;
     }
 
@@ -153,18 +105,18 @@ class EventoModel {
         if (!estadosPermitidos.includes(nuevoEstado)) {
             return false;
         }
-        
-        const sql = 'UPDATE eventos SET estado = ? WHERE id = ?';
-        const [result] = await promisePool.execute(sql, [nuevoEstado, id]);
+
+        const sql = 'UPDATE eventos SET estado = ? WHERE id = ? AND usuario_id = ?';
+        const [result] = await promisePool.execute(sql, [nuevoEstado, id, usuarioId]);
         return result.affectedRows > 0;
     }
 
-    // Calcular estado actual basado en fechas 
+    // Calcular estado actual basado en fechas
     static calcularEstadoPorFechas(fecha_inicio, fecha_fin) {
         const ahora = new Date();
         const inicio = new Date(fecha_inicio);
         const fin = new Date(fecha_fin);
-        
+
         if (fin <= ahora) {
             return 'vencido';
         } else if (inicio <= ahora && fin > ahora) {
@@ -175,27 +127,27 @@ class EventoModel {
         return 'pendiente';
     }
 
-    // Obtener evento con estado actualizado 
+    // Obtener evento con estado actualizado
     static async obtenerConEstadoEnVivo(id, usuarioId) {
         const evento = await this.obtenerPorId(id, usuarioId);
         if (!evento) return null;
-        
-        const estadosconst = ['cancelado', 'completado', 'pospuesto','vencido'];
-        if (!estadosconst.includes(evento.estado)) {
+
+        const estadosManuales = ['cancelado', 'completado', 'pospuesto', 'vencido'];
+        if (!estadosManuales.includes(evento.estado)) {
             evento.estado_calculado = this.calcularEstadoPorFechas(evento.fecha_inicio, evento.fecha_fin);
-            evento.estado_real = evento.estado_calculado; // Para que el frontend use este
+            evento.estado_real = evento.estado_calculado;
         } else {
             evento.estado_real = evento.estado;
         }
-        
+
         return evento;
     }
 
     // Listar eventos con estado calculado en vivo
     static async listarConEstadoEnVivo(usuarioId, filtros = {}) {
         const eventos = await this.listarPorUsuario(usuarioId, filtros);
-        const estadosManuales = ['cancelado', 'completado', 'pospuesto','vencido'];
-        
+        const estadosManuales = ['cancelado', 'completado', 'pospuesto', 'vencido'];
+
         return eventos.map(evento => {
             if (!estadosManuales.includes(evento.estado)) {
                 evento.estado_calculado = this.calcularEstadoPorFechas(evento.fecha_inicio, evento.fecha_fin);
@@ -207,34 +159,29 @@ class EventoModel {
         });
     }
 
-    // E2  - E3
-    static async actualizarEstadosAutomaticos(usuarioId=null) {
+    // Actualizacion automatica de estados por fechas (cron)
+    static async actualizarEstadosAutomaticos(usuarioId = null) {
         const ahora = new Date();
-        
+
         let sql = `
             UPDATE eventos e
-            INNER JOIN elementos el ON e.elemento_id = el.id
             SET e.estado = CASE
-                -- Eventos vencidos (fecha_fin ya pasó)
                 WHEN e.fecha_fin <= ? AND e.estado NOT IN ('cancelado', 'completado', 'pospuesto')
                     THEN 'vencido'
-                -- Eventos en curso (empezaron pero no terminaron)
-                WHEN e.fecha_inicio <= ? AND e.fecha_fin > ? 
+                WHEN e.fecha_inicio <= ? AND e.fecha_fin > ?
                     AND e.estado NOT IN ('cancelado', 'completado', 'pospuesto')
                     THEN 'en_curso'
-                -- Eventos pendientes (aún no empiezan)
-                WHEN e.fecha_inicio > ? 
+                WHEN e.fecha_inicio > ?
                     AND e.estado NOT IN ('cancelado', 'completado', 'pospuesto')
                     THEN 'pendiente'
                 ELSE e.estado
             END
-            
         `;
-        
+
         const params = [ahora, ahora, ahora, ahora];
-        
+
         if (usuarioId) {
-            sql += ` WHERE el.usuario_id = ?`;
+            sql += ` WHERE e.usuario_id = ?`;
             params.push(usuarioId);
         }
 

@@ -4,12 +4,12 @@ import RecordatorioModel from '../models/RecordatorioModel.js';
 export const listarRecordatorios = async (req, res) => {
     try {
         const usuarioId = req.user.id;
-        const { 
-            tipo_entidad, 
-            estado, 
-            entidad_id, 
-            fecha_desde, 
-            fecha_hasta, 
+        const {
+            estado,
+            evento_id,
+            tarea_id,
+            fecha_desde,
+            fecha_hasta,
             solo_pendientes,
             orden,
             direccion,
@@ -17,9 +17,9 @@ export const listarRecordatorios = async (req, res) => {
         } = req.query;
 
         const filtros = {
-            tipo_entidad: tipo_entidad || null,
             estado: estado || null,
-            entidad_id: entidad_id ? parseInt(entidad_id) : null,
+            evento_id: evento_id ? parseInt(evento_id) : null,
+            tarea_id: tarea_id ? parseInt(tarea_id) : null,
             fecha_desde: fecha_desde || null,
             fecha_hasta: fecha_hasta || null,
             solo_pendientes: solo_pendientes === 'true',
@@ -78,22 +78,7 @@ export const obtenerRecordatorio = async (req, res) => {
 export const crearRecordatorio = async (req, res) => {
     try {
         const usuarioId = req.user.id;
-        const { tipo_entidad, entidad_id, fecha_envio, mensaje, repeticiones } = req.body;
-
-        // Validaciones de entrada
-        if (!tipo_entidad) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'El tipo de entidad es obligatorio'
-            });
-        }
-
-        if (!entidad_id) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'El ID de la entidad es obligatorio'
-            });
-        }
+        const { evento_id, tarea_id, fecha_envio, mensaje, repeticiones } = req.body;
 
         if (!fecha_envio) {
             return res.status(400).json({
@@ -102,19 +87,16 @@ export const crearRecordatorio = async (req, res) => {
             });
         }
 
-        // Validar que la fecha sea futura
-        const fechaActual = new Date();
-        const fechaEnvio = new Date(fecha_envio);
-        if (fechaEnvio <= fechaActual) {
+        if ((!evento_id && !tarea_id) || (evento_id && tarea_id)) {
             return res.status(400).json({
                 success: false,
-                mensaje: 'La fecha de envío debe ser futura'
+                mensaje: 'El recordatorio debe apuntar a un evento o a una tarea, pero no a ambos'
             });
         }
 
         const nuevoRecordatorio = await RecordatorioModel.crear(usuarioId, {
-            tipo_entidad,
-            entidad_id,
+            evento_id,
+            tarea_id,
             fecha_envio,
             mensaje,
             repeticiones
@@ -142,36 +124,12 @@ export const actualizarRecordatorio = async (req, res) => {
         const { id } = req.params;
         const { fecha_envio, mensaje, estado, repeticiones } = req.body;
 
-        // Verificar que el recordatorio existe
         const recordatorioExistente = await RecordatorioModel.obtenerPorId(id, usuarioId);
         if (!recordatorioExistente) {
             return res.status(404).json({
                 success: false,
                 mensaje: 'Recordatorio no encontrado'
             });
-        }
-
-        // Validar fecha futura si viene
-        if (fecha_envio) {
-            const fechaActual = new Date();
-            const fechaEnvio = new Date(fecha_envio);
-            if (fechaEnvio <= fechaActual) {
-                return res.status(400).json({
-                    success: false,
-                    mensaje: 'La fecha de envío debe ser futura'
-                });
-            }
-        }
-
-        // Validar estado si viene
-        if (estado) {
-            const estadosValidos = ['programado', 'leido', 'pospuesto', 'cancelado'];
-            if (!estadosValidos.includes(estado)) {
-                return res.status(400).json({
-                    success: false,
-                    mensaje: 'Estado no válido. Debe ser: programado, leido, pospuesto o cancelado'
-                });
-            }
         }
 
         const recordatorioActualizado = await RecordatorioModel.actualizar(id, usuarioId, {
@@ -246,16 +204,6 @@ export const posponerRecordatorio = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 mensaje: 'Recordatorio no encontrado'
-            });
-        }
-
-        // Validar que la nueva fecha sea futura
-        const fechaActual = new Date();
-        const nuevaFecha = new Date(nueva_fecha);
-        if (nuevaFecha <= fechaActual) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'La nueva fecha de envío debe ser futura'
             });
         }
 
@@ -335,44 +283,49 @@ export const eliminarRecordatorio = async (req, res) => {
     }
 };
 
-// Obtener recordatorios por entidad
-export const listarRecordatoriosPorEntidad = async (req, res) => {
+// Obtener recordatorios de un evento
+export const listarRecordatoriosPorEvento = async (req, res) => {
     try {
         const usuarioId = req.user.id;
-        const { tipo_entidad, entidad_id } = req.params;
+        const { evento_id } = req.params;
 
-        if (!tipo_entidad || !['evento', 'tarea', 'nota'].includes(tipo_entidad)) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'Tipo de entidad no válido. Debe ser: evento, tarea o nota'
-            });
-        }
-
-        if (!entidad_id) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'El ID de la entidad es requerido'
-            });
-        }
-
-        const recordatorios = await RecordatorioModel.listarPorEntidad(
-            usuarioId, 
-            tipo_entidad, 
-            parseInt(entidad_id)
-        );
+        const recordatorios = await RecordatorioModel.listarPorEvento(usuarioId, parseInt(evento_id));
 
         res.json({
             success: true,
             data: recordatorios,
             total: recordatorios.length,
-            tipo_entidad,
-            entidad_id
+            evento_id
         });
     } catch (error) {
-        console.error('Error al listar recordatorios por entidad:', error);
+        console.error('Error al listar recordatorios por evento:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al listar los recordatorios de la entidad',
+            mensaje: 'Error al listar los recordatorios del evento',
+            error: error.message
+        });
+    }
+};
+
+// Obtener recordatorios de una tarea
+export const listarRecordatoriosPorTarea = async (req, res) => {
+    try {
+        const usuarioId = req.user.id;
+        const { tarea_id } = req.params;
+
+        const recordatorios = await RecordatorioModel.listarPorTarea(usuarioId, parseInt(tarea_id));
+
+        res.json({
+            success: true,
+            data: recordatorios,
+            total: recordatorios.length,
+            tarea_id
+        });
+    } catch (error) {
+        console.error('Error al listar recordatorios por tarea:', error);
+        res.status(500).json({
+            success: false,
+            mensaje: 'Error al listar los recordatorios de la tarea',
             error: error.message
         });
     }
@@ -381,7 +334,6 @@ export const listarRecordatoriosPorEntidad = async (req, res) => {
 // Obtener recordatorios pendientes (para el cron job)
 export const obtenerRecordatoriosPendientes = async (req, res) => {
     try {
-        // Solo permitir acceso interno o admin
         const recordatorios = await RecordatorioModel.obtenerPendientes();
 
         res.json({
@@ -412,11 +364,7 @@ export const listarRecordatoriosPorRango = async (req, res) => {
             });
         }
 
-        const recordatorios = await RecordatorioModel.listarPorRango(
-            usuarioId,
-            fecha_inicio,
-            fecha_fin
-        );
+        const recordatorios = await RecordatorioModel.listarPorRango(usuarioId, fecha_inicio, fecha_fin);
 
         res.json({
             success: true,
@@ -477,50 +425,6 @@ export const limpiarRecordatoriosViejos = async (req, res) => {
         res.status(500).json({
             success: false,
             mensaje: 'Error al limpiar los recordatorios viejos',
-            error: error.message
-        });
-    }
-};
-
-// Verificar si existe recordatorio para una entidad
-export const verificarRecordatorioExistente = async (req, res) => {
-    try {
-        const usuarioId = req.user.id;
-        const { tipo_entidad, entidad_id } = req.params;
-
-        if (!tipo_entidad || !['evento', 'tarea', 'nota'].includes(tipo_entidad)) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'Tipo de entidad no válido. Debe ser: evento, tarea o nota'
-            });
-        }
-
-        if (!entidad_id) {
-            return res.status(400).json({
-                success: false,
-                mensaje: 'El ID de la entidad es requerido'
-            });
-        }
-
-        const existe = await RecordatorioModel.existeParaEntidad(
-            usuarioId,
-            tipo_entidad,
-            parseInt(entidad_id)
-        );
-
-        res.json({
-            success: true,
-            data: {
-                existe,
-                tipo_entidad,
-                entidad_id
-            }
-        });
-    } catch (error) {
-        console.error('Error al verificar recordatorio existente:', error);
-        res.status(500).json({
-            success: false,
-            mensaje: 'Error al verificar el recordatorio',
             error: error.message
         });
     }

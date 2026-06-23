@@ -2,41 +2,57 @@
 import promisePool from '../config/database.js';
 
 class RecordatorioModel {
-    // Crear un nuevo recordatorio
+    // Validar que el evento pertenezca al usuario
+    static async validarEvento(usuarioId, eventoId) {
+        const [rows] = await promisePool.execute(
+            'SELECT id FROM eventos WHERE id = ? AND usuario_id = ?',
+            [eventoId, usuarioId]
+        );
+        if (rows.length === 0) {
+            throw new Error('El evento especificado no existe o no pertenece al usuario');
+        }
+    }
+
+    // Validar que la tarea pertenezca al usuario
+    static async validarTarea(usuarioId, tareaId) {
+        const [rows] = await promisePool.execute(
+            'SELECT id FROM tareas WHERE id = ? AND usuario_id = ?',
+            [tareaId, usuarioId]
+        );
+        if (rows.length === 0) {
+            throw new Error('La tarea especificada no existe o no pertenece al usuario');
+        }
+    }
+
+    // Crear un nuevo recordatorio (apunta a UN evento o UNA tarea, nunca ambos)
     static async crear(usuarioId, datos) {
-        const { tipo_entidad, entidad_id, fecha_envio, mensaje, repeticiones } = datos;
-
-        // Validaciones básicas
-        if (!tipo_entidad || !['evento', 'tarea', 'nota'].includes(tipo_entidad)) {
-            throw new Error('Tipo de entidad no válido. Debe ser: evento, tarea o nota');
-        }
-
-        if (!entidad_id) {
-            throw new Error('El ID de la entidad es obligatorio');
-        }
+        const { evento_id, tarea_id, fecha_envio, mensaje, repeticiones } = datos;
 
         if (!fecha_envio) {
             throw new Error('La fecha de envío es obligatoria');
         }
 
-        // Validar que la fecha de envío sea futura
-        const fechaActual = new Date();
+        // Debe apuntar exactamente a una entidad
+        if ((!evento_id && !tarea_id) || (evento_id && tarea_id)) {
+            throw new Error('El recordatorio debe apuntar a un evento o a una tarea, pero no a ambos');
+        }
+
         const fechaEnvio = new Date(fecha_envio);
-        if (fechaEnvio <= fechaActual) {
+        if (fechaEnvio <= new Date()) {
             throw new Error('La fecha de envío debe ser futura');
         }
 
-        // Validar que la entidad exista y pertenezca al usuario
-        await this.validarEntidad(usuarioId, tipo_entidad, entidad_id);
+        if (evento_id) await this.validarEvento(usuarioId, evento_id);
+        if (tarea_id) await this.validarTarea(usuarioId, tarea_id);
 
         const sql = `
-            INSERT INTO recordatorios (usuario_id, tipo_entidad, entidad_id, fecha_envio, mensaje, repeticiones)
+            INSERT INTO recordatorios (usuario_id, evento_id, tarea_id, fecha_envio, mensaje, repeticiones)
             VALUES (?, ?, ?, ?, ?, ?)
         `;
         const [result] = await promisePool.execute(sql, [
             usuarioId,
-            tipo_entidad,
-            entidad_id,
+            evento_id || null,
+            tarea_id || null,
             fecha_envio,
             mensaje || null,
             repeticiones || null
@@ -45,111 +61,65 @@ class RecordatorioModel {
         return await this.obtenerPorId(result.insertId, usuarioId);
     }
 
-    // Validar que la entidad exista y pertenezca al usuario
-    static async validarEntidad(usuarioId, tipo_entidad, entidad_id) {
-        let tabla, idCampo, query;
-
-        if (tipo_entidad === 'evento' || tipo_entidad === 'tarea') {
-            // Eventos y tareas usan la tabla elementos
-            if (tipo_entidad === 'evento') {
-                query = `
-                    SELECT e.id
-                    FROM elementos e
-                    INNER JOIN eventos ev ON ev.elemento_id = e.id
-                    WHERE e.id = ? AND e.usuario_id = ?
-                `;
-            } else {
-                query = `
-                    SELECT e.id
-                    FROM elementos e
-                    INNER JOIN tareas t ON t.elemento_id = e.id
-                    WHERE e.id = ? AND e.usuario_id = ?
-                `;
-            }
-        } else if (tipo_entidad === 'nota') {
-            query = 'SELECT id FROM notas WHERE id = ? AND usuario_id = ?';
-        }
-
-        const [rows] = await promisePool.execute(query, [entidad_id, usuarioId]);
-        if (rows.length === 0) {
-            throw new Error(`El ${tipo_entidad} especificado no existe o no pertenece al usuario`);
-        }
-        return true;
+    // SELECT base con el título de la entidad asociada
+    static baseSelect() {
+        return `
+            SELECT r.*,
+                   CASE WHEN r.evento_id IS NOT NULL THEN 'evento'
+                        WHEN r.tarea_id IS NOT NULL THEN 'tarea' END as entidad_tipo,
+                   COALESCE(e.titulo, t.titulo) as entidad_titulo
+            FROM recordatorios r
+            LEFT JOIN eventos e ON r.evento_id = e.id
+            LEFT JOIN tareas t ON r.tarea_id = t.id
+        `;
     }
 
     // Obtener un recordatorio por ID
     static async obtenerPorId(id, usuarioId) {
-        const sql = `
-            SELECT r.*,
-                   CASE 
-                       WHEN r.tipo_entidad = 'evento' THEN (SELECT e.titulo FROM elementos e WHERE e.id = r.entidad_id)
-                       WHEN r.tipo_entidad = 'tarea' THEN (SELECT e.titulo FROM elementos e WHERE e.id = r.entidad_id)
-                       WHEN r.tipo_entidad = 'nota' THEN (SELECT n.titulo FROM notas n WHERE n.id = r.entidad_id)
-                   END as entidad_titulo
-            FROM recordatorios r
-            WHERE r.id = ? AND r.usuario_id = ?
-        `;
+        const sql = `${this.baseSelect()} WHERE r.id = ? AND r.usuario_id = ?`;
         const [rows] = await promisePool.execute(sql, [id, usuarioId]);
         return rows[0] || null;
     }
 
     // Obtener todos los recordatorios de un usuario
     static async listarPorUsuario(usuarioId, filtros = {}) {
-        let sql = `
-            SELECT r.*,
-                   CASE 
-                       WHEN r.tipo_entidad = 'evento' THEN (SELECT e.titulo FROM elementos e WHERE e.id = r.entidad_id)
-                       WHEN r.tipo_entidad = 'tarea' THEN (SELECT e.titulo FROM elementos e WHERE e.id = r.entidad_id)
-                       WHEN r.tipo_entidad = 'nota' THEN (SELECT n.titulo FROM notas n WHERE n.id = r.entidad_id)
-                   END as entidad_titulo
-            FROM recordatorios r
-            WHERE r.usuario_id = ?
-        `;
+        let sql = `${this.baseSelect()} WHERE r.usuario_id = ?`;
         const params = [usuarioId];
 
-        // Filtro por tipo de entidad
-        if (filtros.tipo_entidad && ['evento', 'tarea', 'nota'].includes(filtros.tipo_entidad)) {
-            sql += ` AND r.tipo_entidad = ?`;
-            params.push(filtros.tipo_entidad);
-        }
-
-        // Filtro por estado
         if (filtros.estado && ['programado', 'leido', 'pospuesto', 'cancelado'].includes(filtros.estado)) {
             sql += ` AND r.estado = ?`;
             params.push(filtros.estado);
         }
 
-        // Filtro por entidad_id
-        if (filtros.entidad_id) {
-            sql += ` AND r.entidad_id = ?`;
-            params.push(filtros.entidad_id);
+        if (filtros.evento_id) {
+            sql += ` AND r.evento_id = ?`;
+            params.push(filtros.evento_id);
         }
 
-        // Filtro por fecha de envío (desde)
+        if (filtros.tarea_id) {
+            sql += ` AND r.tarea_id = ?`;
+            params.push(filtros.tarea_id);
+        }
+
         if (filtros.fecha_desde) {
             sql += ` AND DATE(r.fecha_envio) >= ?`;
             params.push(filtros.fecha_desde);
         }
 
-        // Filtro por fecha de envío (hasta)
         if (filtros.fecha_hasta) {
             sql += ` AND DATE(r.fecha_envio) <= ?`;
             params.push(filtros.fecha_hasta);
         }
 
-        // Solo recordatorios pendientes (fecha_envio >= ahora y estado = programado)
         if (filtros.solo_pendientes) {
             sql += ` AND r.fecha_envio >= NOW() AND r.estado = 'programado'`;
         }
 
-        // Ordenamiento
-        const orden = filtros.orden || 'fecha_envio';
-        const direccion = filtros.direccion || 'ASC';
-        const ordenesPermitidos = ['fecha_envio', 'creado_en', 'estado', 'tipo_entidad'];
-        const ordenFinal = ordenesPermitidos.includes(orden) ? orden : 'fecha_envio';
-        sql += ` ORDER BY r.${ordenFinal} ${direccion === 'DESC' ? 'DESC' : 'ASC'}`;
+        const direccion = filtros.direccion === 'DESC' ? 'DESC' : 'ASC';
+        const ordenesPermitidos = ['fecha_envio', 'creado_en', 'estado'];
+        const ordenFinal = ordenesPermitidos.includes(filtros.orden) ? filtros.orden : 'fecha_envio';
+        sql += ` ORDER BY r.${ordenFinal} ${direccion}`;
 
-        // Límite
         if (filtros.limite) {
             sql += ` LIMIT ?`;
             params.push(parseInt(filtros.limite));
@@ -168,28 +138,24 @@ class RecordatorioModel {
 
         const { fecha_envio, mensaje, estado, repeticiones } = datos;
 
-        // Validar estado
         if (estado && !['programado', 'leido', 'pospuesto', 'cancelado'].includes(estado)) {
             throw new Error('Estado no válido. Debe ser: programado, leido, pospuesto o cancelado');
         }
 
-        // Validar fecha futura si viene
         if (fecha_envio) {
             const fechaEnvio = new Date(fecha_envio);
-            const fechaActual = new Date();
-            if (fechaEnvio <= fechaActual) {
+            if (fechaEnvio <= new Date()) {
                 throw new Error('La fecha de envío debe ser futura');
             }
         }
 
-        // Si se marca como leido, registrar fecha_lectura
-        let fechaLectura = null;
+        let fechaLectura = recordatorioExistente.fecha_lectura;
         if (estado === 'leido') {
             fechaLectura = new Date();
         }
 
         const sql = `
-            UPDATE recordatorios 
+            UPDATE recordatorios
             SET fecha_envio = COALESCE(?, fecha_envio),
                 mensaje = ?,
                 estado = COALESCE(?, estado),
@@ -199,11 +165,11 @@ class RecordatorioModel {
         `;
 
         const [result] = await promisePool.execute(sql, [
-            fecha_envio || undefined,
-            mensaje !== undefined ? (mensaje || null) : undefined,
-            estado || undefined,
-            repeticiones !== undefined ? repeticiones : undefined,
-            fechaLectura,
+            fecha_envio || null,
+            mensaje !== undefined ? (mensaje || null) : recordatorioExistente.mensaje,
+            estado || null,
+            repeticiones !== undefined ? repeticiones : recordatorioExistente.repeticiones,
+            fechaLectura || null,
             id,
             usuarioId
         ]);
@@ -215,30 +181,23 @@ class RecordatorioModel {
         return await this.obtenerPorId(id, usuarioId);
     }
 
-    // Marcar recordatorio como leido
     static async marcarLeido(id, usuarioId) {
         return await this.actualizar(id, usuarioId, { estado: 'leido' });
     }
 
-    // Posponer recordatorio
     static async posponer(id, usuarioId, nuevaFecha) {
         if (!nuevaFecha) {
             throw new Error('La nueva fecha de envío es requerida');
         }
-
-        const fechaEnvio = new Date(nuevaFecha);
-        const fechaActual = new Date();
-        if (fechaEnvio <= fechaActual) {
+        if (new Date(nuevaFecha) <= new Date()) {
             throw new Error('La fecha de envío debe ser futura');
         }
-
         return await this.actualizar(id, usuarioId, {
             estado: 'pospuesto',
             fecha_envio: nuevaFecha
         });
     }
 
-    // Cancelar recordatorio
     static async cancelar(id, usuarioId) {
         return await this.actualizar(id, usuarioId, { estado: 'cancelado' });
     }
@@ -250,28 +209,26 @@ class RecordatorioModel {
         return result.affectedRows > 0;
     }
 
-    // Obtener recordatorios por entidad (evento/tarea/nota)
-    static async listarPorEntidad(usuarioId, tipo_entidad, entidad_id) {
-        return await this.listarPorUsuario(usuarioId, {
-            tipo_entidad,
-            entidad_id
-        });
+    static async listarPorEvento(usuarioId, eventoId) {
+        return await this.listarPorUsuario(usuarioId, { evento_id: eventoId });
+    }
+
+    static async listarPorTarea(usuarioId, tareaId) {
+        return await this.listarPorUsuario(usuarioId, { tarea_id: tareaId });
     }
 
     // Obtener recordatorios pendientes (para el cron job)
     static async obtenerPendientes() {
         const sql = `
             SELECT r.*,
-                   u.email as usuario_email,
+                   u.correo as usuario_correo,
                    u.nombre as usuario_nombre,
-                   CASE 
-                       WHEN r.tipo_entidad = 'evento' THEN (SELECT e.titulo FROM elementos e WHERE e.id = r.entidad_id)
-                       WHEN r.tipo_entidad = 'tarea' THEN (SELECT e.titulo FROM elementos e WHERE e.id = r.entidad_id)
-                       WHEN r.tipo_entidad = 'nota' THEN (SELECT n.titulo FROM notas n WHERE n.id = r.entidad_id)
-                   END as entidad_titulo
+                   COALESCE(e.titulo, t.titulo) as entidad_titulo
             FROM recordatorios r
             INNER JOIN usuarios u ON r.usuario_id = u.id
-            WHERE r.estado = 'programado' 
+            LEFT JOIN eventos e ON r.evento_id = e.id
+            LEFT JOIN tareas t ON r.tarea_id = t.id
+            WHERE r.estado = 'programado'
                 AND r.fecha_envio <= NOW()
                 AND r.fecha_envio > DATE_SUB(NOW(), INTERVAL 1 HOUR)
             ORDER BY r.fecha_envio ASC
@@ -280,7 +237,6 @@ class RecordatorioModel {
         return rows;
     }
 
-    // Obtener recordatorios por rango de fechas
     static async listarPorRango(usuarioId, fechaInicio, fechaFin) {
         return await this.listarPorUsuario(usuarioId, {
             fecha_desde: fechaInicio,
@@ -303,14 +259,13 @@ class RecordatorioModel {
     // Obtener resumen de recordatorios
     static async obtenerResumen(usuarioId) {
         const sql = `
-            SELECT 
+            SELECT
                 COUNT(*) as total,
                 SUM(CASE WHEN estado = 'programado' THEN 1 ELSE 0 END) as programados,
                 SUM(CASE WHEN estado = 'leido' THEN 1 ELSE 0 END) as leidos,
-                SUM(CASE WHEN estado = 'pospuesto' THEN 1 ELSE 0 END) como pospuestos,
-                SUM(CASE WHEN estado = 'cancelado' THEN 1 ELSE 0 END) como cancelados,
-                SUM(CASE WHEN fecha_envio >= NOW() AND estado = 'programado' THEN 1 ELSE 0 END) como pendientes,
-                COUNT(DISTINCT entidad_id) as entidades_distintas
+                SUM(CASE WHEN estado = 'pospuesto' THEN 1 ELSE 0 END) as pospuestos,
+                SUM(CASE WHEN estado = 'cancelado' THEN 1 ELSE 0 END) as cancelados,
+                SUM(CASE WHEN fecha_envio >= NOW() AND estado = 'programado' THEN 1 ELSE 0 END) as pendientes
             FROM recordatorios
             WHERE usuario_id = ?
         `;
@@ -318,25 +273,11 @@ class RecordatorioModel {
         return rows[0];
     }
 
-    // Verificar si existe un recordatorio para una entidad
-    static async existeParaEntidad(usuarioId, tipo_entidad, entidad_id) {
-        const sql = `
-            SELECT id FROM recordatorios 
-            WHERE usuario_id = ? 
-                AND tipo_entidad = ? 
-                AND entidad_id = ?
-                AND estado IN ('programado', 'pospuesto')
-                AND fecha_envio >= NOW()
-        `;
-        const [rows] = await promisePool.execute(sql, [usuarioId, tipo_entidad, entidad_id]);
-        return rows.length > 0;
-    }
-
     // Eliminar recordatorios viejos (leidos o cancelados de hace más de 30 días)
     static async limpiarViejos(usuarioId) {
         const sql = `
-            DELETE FROM recordatorios 
-            WHERE usuario_id = ? 
+            DELETE FROM recordatorios
+            WHERE usuario_id = ?
                 AND estado IN ('leido', 'cancelado')
                 AND fecha_lectura < DATE_SUB(NOW(), INTERVAL 30 DAY)
         `;
