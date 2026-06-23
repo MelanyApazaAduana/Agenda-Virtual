@@ -9,14 +9,10 @@ export const crearEvento = (datos) => api.post('/eventos', datos)
 
 export const actualizarEvento = (id, datos) => api.put(`/eventos/${id}`, datos)
 
-export const eliminarEventoCompleto = (id) =>
-  api.delete(`/eventos/${id}/completo`)
+export const eliminarEvento = (id) => api.delete(`/eventos/${id}`)
 
 export const cambiarEstadoEvento = (id, estado) =>
   api.patch(`/eventos/${id}/estado`, { estado })
 
 export const actualizarEstadosAutomaticos = () =>
   api.put('/eventos/estados/actualizar')
-
-export const actualizarEstadosGlobales = () =>
-  api.put('/eventos/estados/actualizar/global')

@@ -50,7 +50,7 @@ class TareaModel {
 
         // Filtro por rango de fecha límite
         if (filtros.fecha_limite_desde && filtros.fecha_limite_hasta) {
-            sql += ` AND fecha_limite BETWEEN ? AND ?`;
+            sql += ` AND DATE(fecha_limite) BETWEEN ? AND ?`;
             params.push(filtros.fecha_limite_desde, filtros.fecha_limite_hasta);
         } else if (filtros.fecha_limite_hasta) {
             sql += ` AND fecha_limite <= ?`;

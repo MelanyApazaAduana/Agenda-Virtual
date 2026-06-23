@@ -19,41 +19,41 @@
           >{{ item.dia }}</span>
 
           <div v-if="!item.fueraMes" class="flex-1 space-y-1 overflow-y-auto no-scrollbar">
-            <div v-for="evento in eventosDelDia(item.dia)" :key="'e-' + evento.id"
-                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate flex items-center gap-1"
-                 :class="estadoClaseEvento(estadoColor(evento.estado)).cell">
-              <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="estadoClaseEvento(estadoColor(evento.estado)).dot"></span>
-              {{ truncarTexto(evento.titulo, 12) }}
+            <div v-for="evento in eventosDelDia(item.fecha)" :key="'e-' + evento.id"
+                 @click.stop="editar('evento', evento)"
+                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate flex items-center gap-1 hover:opacity-80"
+                 :style="{ backgroundColor: colorSuave(evento.color_hex), color: evento.color_hex || '#374151' }">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: evento.color_hex || '#3B82F6' }"></span>
+              {{ truncar(evento.titulo, 12) }}
             </div>
-            <div v-for="tarea in tareasDelDia(item.dia)" :key="'t-' + tarea.id"
-                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate bg-green-50 text-green-700 border-l-2 border-green-500">
-              {{ truncarTexto(tarea.titulo, 15) }}
+            <div v-for="tarea in tareasDelDia(item.fecha)" :key="'t-' + tarea.id"
+                 @click.stop="editar('tarea', tarea)"
+                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate flex items-center gap-1 hover:opacity-80"
+                 :style="{ backgroundColor: colorSuave(tarea.color_hex), color: tarea.color_hex || '#374151' }">
+              <span class="w-1.5 h-1.5 rounded-sm shrink-0" :style="{ backgroundColor: tarea.color_hex || '#10B981' }"></span>
+              {{ truncar(tarea.titulo, 13) }}
             </div>
-            <div v-for="nota in notasDelDia(item.dia)" :key="'n-' + nota.id"
-                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate bg-yellow-50 text-yellow-700 border-l-2 border-yellow-500">
-              {{ truncarTexto(nota.titulo, 15) }}
+            <div v-for="nota in notasDelDia(item.fecha)" :key="'n-' + nota.id"
+                 @click.stop="editar('nota', nota)"
+                 class="text-[10px] px-1.5 py-0.5 rounded font-medium truncate hover:opacity-80"
+                 :style="{ backgroundColor: colorSuave(nota.color_hex), color: nota.color_hex || '#92400e' }">
+              {{ truncar(nota.titulo, 15) }}
             </div>
-          </div>
-
-          <div v-if="!item.fueraMes" class="flex gap-1 mt-auto pt-1">
-            <span v-if="eventosDelDia(item.dia).length" class="w-1.5 h-1.5 rounded-full bg-blue-500" title="Eventos"></span>
-            <span v-if="tareasDelDia(item.dia).length" class="w-1.5 h-1.5 rounded-full bg-green-500" title="Tareas"></span>
-            <span v-if="notasDelDia(item.dia).length" class="w-1.5 h-1.5 rounded-full bg-yellow-500" title="Notas"></span>
           </div>
         </div>
       </div>
 
-      <!-- Day Detail Panel Inline -->
+      <!-- Panel detalle del día -->
       <div v-if="diaSeleccionado !== null" class="border-t border-gray-200 bg-white shrink-0 max-h-[280px] overflow-y-auto">
         <div class="px-6 py-3 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white">
           <h3 class="text-sm font-bold text-gray-900">
-            {{ diaSeleccionado }} de {{ mesActualLabel }}
+            {{ tituloDiaSeleccionado }}
             <span v-if="itemsDiaSeleccionado.length" class="text-gray-400 font-normal ml-1">· {{ itemsDiaSeleccionado.length }} registros</span>
           </h3>
           <div class="flex items-center gap-2">
-            <button @click="abrirFormulario('evento')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">+ Evento</button>
-            <button @click="abrirFormulario('tarea')" class="px-3 py-1.5 text-xs font-semibold bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition">+ Tarea</button>
-            <button @click="abrirFormulario('nota')" class="px-3 py-1.5 text-xs font-semibold bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition">+ Nota</button>
+            <button @click="crearNuevo('evento')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">+ Evento</button>
+            <button @click="crearNuevo('tarea')" class="px-3 py-1.5 text-xs font-semibold bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition">+ Tarea</button>
+            <button @click="crearNuevo('nota')" class="px-3 py-1.5 text-xs font-semibold bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition">+ Nota</button>
             <button @click="cerrarDetalleDia" class="text-gray-400 hover:text-gray-600 transition ml-1">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -67,45 +67,43 @@
           </div>
 
           <div v-if="eventosDiaSeleccionado.length">
-            <h4 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-blue-500"></span> Eventos ({{ eventosDiaSeleccionado.length }})
-            </h4>
+            <h4 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Eventos ({{ eventosDiaSeleccionado.length }})</h4>
             <div class="space-y-1.5">
               <div v-for="item in eventosDiaSeleccionado" :key="item.id"
-                   class="rounded-lg px-4 py-2.5 border-l-4 flex items-start justify-between gap-2"
-                   :class="item.estado === 'cancelado' ? 'bg-gray-50 border-l-gray-400 opacity-60' : item.estado === 'completado' ? 'bg-green-50 border-l-green-500' : 'bg-blue-50 border-l-blue-500'">
+                   @click="editar('evento', item)"
+                   class="rounded-lg px-4 py-2.5 border-l-4 flex items-start justify-between gap-2 cursor-pointer hover:bg-gray-50"
+                   :style="{ borderLeftColor: item.color_hex || '#3B82F6' }">
                 <div class="min-w-0">
                   <p class="text-sm font-semibold text-gray-900 truncate">{{ item.titulo }}</p>
                   <p class="text-xs text-gray-500 mt-0.5">{{ formatoHora(item.fecha_inicio) }} - {{ formatoHora(item.fecha_fin) }}</p>
                 </div>
-                <span class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
-                      :class="estadoClaseEvento(estadoColor(item.estado)).badge">
-                  {{ estadoEtiqueta(item.estado) }}
+                <span class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" :class="badgeEstado(item.estado)">
+                  {{ etiquetaEstado(item.estado) }}
                 </span>
               </div>
             </div>
           </div>
 
           <div v-if="tareasDiaSeleccionado.length">
-            <h4 class="text-xs font-bold text-green-600 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-green-500"></span> Tareas ({{ tareasDiaSeleccionado.length }})
-            </h4>
+            <h4 class="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Tareas ({{ tareasDiaSeleccionado.length }})</h4>
             <div class="space-y-1.5">
               <div v-for="item in tareasDiaSeleccionado" :key="item.id"
-                   class="bg-green-50 rounded-lg px-4 py-2.5 border-l-4 border-green-500">
+                   @click="editar('tarea', item)"
+                   class="rounded-lg px-4 py-2.5 border-l-4 cursor-pointer hover:bg-gray-50"
+                   :style="{ borderLeftColor: item.color_hex || '#10B981' }">
                 <p class="text-sm font-semibold text-gray-900">{{ item.titulo }}</p>
-                <p class="text-xs text-gray-500 mt-0.5 capitalize">{{ item.estado }} · {{ item.prioridad }}</p>
+                <p class="text-xs text-gray-500 mt-0.5 capitalize">{{ item.estado.replace('_', ' ') }} · {{ item.prioridad }}</p>
               </div>
             </div>
           </div>
 
           <div v-if="notasDiaSeleccionado.length">
-            <h4 class="text-xs font-bold text-yellow-600 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-yellow-500"></span> Notas ({{ notasDiaSeleccionado.length }})
-            </h4>
+            <h4 class="text-xs font-bold text-yellow-600 uppercase tracking-wider mb-2">Notas ({{ notasDiaSeleccionado.length }})</h4>
             <div class="space-y-1.5">
               <div v-for="item in notasDiaSeleccionado" :key="item.id"
-                   class="bg-yellow-50 rounded-lg px-4 py-2.5 border-l-4 border-yellow-500">
+                   @click="editar('nota', item)"
+                   class="rounded-lg px-4 py-2.5 border-l-4 cursor-pointer hover:bg-gray-50"
+                   :style="{ borderLeftColor: item.color_hex || '#F59E0B' }">
                 <p class="text-sm font-semibold text-gray-900">{{ item.titulo }}</p>
                 <p v-if="item.contenido" class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ item.contenido }}</p>
               </div>
@@ -125,437 +123,129 @@
       </div>
     </div>
 
-    <!-- Nuevo Menu -->
-    <AppFab @crear="abrirFormulario" />
+    <AppFab @crear="crearNuevo" />
 
-    <!-- Modal Crear Evento -->
-    <ModalCrearEvento v-if="modalTipo === 'evento'" @cerrar="cerrarModal" @guardar="guardarEvento" />
-
-    <!-- Modal Crear Tarea -->
-    <div v-if="modalTipo === 'tarea'" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans" @click.self="cerrarModal">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div class="bg-gray-50/80 px-6 py-5 border-b border-gray-200 flex items-start justify-between">
-          <div>
-            <h2 class="text-xl font-bold text-gray-900">Nueva Tarea</h2>
-            <p class="text-xs text-gray-500 mt-1">Agrega una tarea para {{ fechaFormateadaParaCreacion }}</p>
-          </div>
-          <button @click="cerrarModal" class="text-gray-500 hover:text-gray-800 transition mt-1">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div class="p-6 space-y-5">
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Título</label>
-            <input v-model="formTarea.titulo" type="text" placeholder="Nombre de la tarea"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black focus:border-black outline-none transition text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Prioridad</label>
-            <select v-model="formTarea.prioridad"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black outline-none transition text-sm appearance-none">
-              <option value="baja">Baja</option>
-              <option value="media">Media</option>
-              <option value="alta">Alta</option>
-              <option value="urgente">Urgente</option>
-            </select>
-          </div>
-          <div class="pt-4 border-t border-gray-200 flex justify-end gap-4">
-            <button @click="cerrarModal" class="text-sm font-semibold text-gray-500 hover:text-gray-800 transition">Cancelar</button>
-            <button @click="guardarTarea" class="px-6 py-2.5 text-sm font-bold text-white bg-black rounded-xl hover:bg-zinc-800 transition shadow-lg shadow-black/10">Guardar Tarea</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal Crear Nota -->
-    <div v-if="modalTipo === 'nota'" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans" @click.self="cerrarModal">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div class="bg-gray-50/80 px-6 py-5 border-b border-gray-200 flex items-start justify-between">
-          <div>
-            <h2 class="text-xl font-bold text-gray-900">Nueva Nota</h2>
-            <p class="text-xs text-gray-500 mt-1">Crea una nota para {{ fechaFormateadaParaCreacion }}</p>
-          </div>
-          <button @click="cerrarModal" class="text-gray-500 hover:text-gray-800 transition mt-1">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div class="p-6 space-y-5">
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Título</label>
-            <input v-model="formNota.titulo" type="text" placeholder="Título de la nota"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black focus:border-black outline-none transition text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Contenido</label>
-            <textarea v-model="formNota.contenido" rows="4" placeholder="Escribe tu nota aquí..."
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-black focus:border-black outline-none transition text-sm resize-none"></textarea>
-          </div>
-          <div class="pt-4 border-t border-gray-200 flex justify-end gap-4">
-            <button @click="cerrarModal" class="text-sm font-semibold text-gray-500 hover:text-gray-800 transition">Cancelar</button>
-            <button @click="guardarNota" class="px-6 py-2.5 text-sm font-bold text-white bg-black rounded-xl hover:bg-zinc-800 transition shadow-lg shadow-black/10">Guardar Nota</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ModalCrearEvento v-if="modal.tipo === 'evento'" :modo="modal.modo" :valores="modal.valores" :fecha-predeterminada="modal.fechaPredeterminada"
+      @cerrar="cerrarModal" @guardar="guardarEvento" @eliminar="eliminarEventoItem" />
+    <ModalCrearTarea v-if="modal.tipo === 'tarea'" :modo="modal.modo" :valores="modal.valores" :fecha-predeterminada="modal.fechaPredeterminada"
+      @cerrar="cerrarModal" @guardar="guardarTarea" @eliminar="eliminarTareaItem" />
+    <ModalCrearNota v-if="modal.tipo === 'nota'" :modo="modal.modo" :valores="modal.valores"
+      @cerrar="cerrarModal" @guardar="guardarNota" @eliminar="eliminarNotaItem" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'
-import ModalCrearEvento from '@/components/eventos/ModalCrearEvento.vue'
+import { storeToRefs } from 'pinia'
+import { useCalendarioStore } from '@/stores/calendarioStore'
+import { useAgenda } from '@/composables/useAgenda'
 import AppFab from '@/components/ui/AppFab.vue'
-import { listarCalendario } from '@/api/calendario.js'
-import { crearEvento } from '@/api/eventos.js'
-import { crearTarea } from '@/api/tareas.js'
-import { crearNota } from '@/api/notas.js'
+import ModalCrearEvento from '@/components/eventos/ModalCrearEvento.vue'
+import ModalCrearTarea from '@/components/tareas/ModalCrearTarea.vue'
+import ModalCrearNota from '@/components/notas/ModalCrearNota.vue'
 
-const route = useRoute()
-const router = useRouter()
+const calStore = useCalendarioStore()
+const { anio, mes, foco } = storeToRefs(calStore)
 
-const vistaActual = ref('mes')
-const cargando = ref(true)
-
-const ahora = dayjs()
-const anioActual = ref(ahora.year())
-const mesActual = ref(ahora.month())
-
-const eventos = ref([])
-const tareas = ref([])
-const notas = ref([])
+const {
+  eventos, tareas, notas, cargando, modal,
+  cargar, abrirCrear, editar, cerrarModal,
+  guardarEvento, guardarTarea, guardarNota,
+  eliminarEventoItem, eliminarTareaItem, eliminarNotaItem
+} = useAgenda()
 
 const diaSeleccionado = ref(null)
-const modalTipo = ref(null)
-
-const formTarea = ref({ titulo: '', prioridad: 'media' })
-const formNota = ref({ titulo: '', contenido: '' })
-
 const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
-const mesActualLabel = computed(() => {
-  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-  return `${meses[mesActual.value]} ${anioActual.value}`
-})
-
-const totalDiasMes = computed(() => {
-  return dayjs(new Date(anioActual.value, mesActual.value)).daysInMonth()
-})
-
 const diasCalendario = computed(() => {
-  const primerDia = dayjs(new Date(anioActual.value, mesActual.value, 1))
+  const primerDia = dayjs(new Date(anio.value, mes.value, 1))
   const diasEnMes = primerDia.daysInMonth()
-  const diaSemanaInicio = primerDia.day()
+  const inicioSemana = primerDia.day()
   const dias = []
-
-  for (let i = 0; i < diaSemanaInicio; i++) {
-    const fecha = primerDia.subtract(diaSemanaInicio - i, 'day')
-    dias.push({
-      dia: fecha.date(),
-      fueraMes: true,
-      esHoy: false,
-      esSeleccionado: false,
-      fecha
-    })
+  for (let i = 0; i < inicioSemana; i++) {
+    const fecha = primerDia.subtract(inicioSemana - i, 'day')
+    dias.push({ dia: fecha.date(), fueraMes: true, esHoy: false, esSeleccionado: false, fecha })
   }
-
   for (let i = 1; i <= diasEnMes; i++) {
-    const fecha = dayjs(new Date(anioActual.value, mesActual.value, i))
+    const fecha = dayjs(new Date(anio.value, mes.value, i))
     dias.push({
-      dia: i,
-      fueraMes: false,
-      esHoy: fecha.isSame(ahora, 'day'),
+      dia: i, fueraMes: false,
+      esHoy: fecha.isSame(dayjs(), 'day'),
       esSeleccionado: diaSeleccionado.value === i,
       fecha
     })
   }
-
   const resto = 42 - dias.length
   for (let i = 1; i <= resto; i++) {
-    const fecha = dayjs(new Date(anioActual.value, mesActual.value + 1, i))
-    dias.push({
-      dia: i,
-      fueraMes: true,
-      esHoy: false,
-      esSeleccionado: false,
-      fecha
-    })
+    const fecha = dayjs(new Date(anio.value, mes.value + 1, i))
+    dias.push({ dia: i, fueraMes: true, esHoy: false, esSeleccionado: false, fecha })
   }
-
   return dias
 })
 
-const fechaFormateadaParaCreacion = computed(() => {
-  if (diaSeleccionado.value !== null) {
-    return `${diaSeleccionado.value} de ${mesActualLabel.value}`
-  }
-  return 'hoy'
-})
+const mismaFecha = (valor, fecha) => valor && dayjs(valor).isSame(fecha, 'day')
+const eventosDelDia = (fecha) => eventos.value.filter((e) => mismaFecha(e.fecha_inicio, fecha))
+const tareasDelDia = (fecha) => tareas.value.filter((t) => mismaFecha(t.fecha_limite, fecha))
+const notasDelDia = (fecha) => notas.value.filter((n) => mismaFecha(n.fecha_creacion, fecha))
 
-const fechaParaCrear = computed(() => {
-  if (diaSeleccionado.value !== null) {
-    return dayjs(new Date(anioActual.value, mesActual.value, diaSeleccionado.value)).format('YYYY-MM-DD')
-  }
-  return ahora.format('YYYY-MM-DD')
-})
+const fechaDeDiaSeleccionado = computed(() =>
+  diaSeleccionado.value !== null ? dayjs(new Date(anio.value, mes.value, diaSeleccionado.value)) : null
+)
+const eventosDiaSeleccionado = computed(() => fechaDeDiaSeleccionado.value ? eventosDelDia(fechaDeDiaSeleccionado.value) : [])
+const tareasDiaSeleccionado = computed(() => fechaDeDiaSeleccionado.value ? tareasDelDia(fechaDeDiaSeleccionado.value) : [])
+const notasDiaSeleccionado = computed(() => fechaDeDiaSeleccionado.value ? notasDelDia(fechaDeDiaSeleccionado.value) : [])
+const itemsDiaSeleccionado = computed(() => [...eventosDiaSeleccionado.value, ...tareasDiaSeleccionado.value, ...notasDiaSeleccionado.value])
 
-const eventosDelDia = (diaNum) => {
-  return eventos.value.filter((e) => {
-    const fecha = dayjs(e.fecha_inicio)
-    return fecha.date() === diaNum && fecha.month() === mesActual.value && fecha.year() === anioActual.value
-  })
+const tituloDiaSeleccionado = computed(() =>
+  fechaDeDiaSeleccionado.value ? fechaDeDiaSeleccionado.value.format('D [de] MMMM') : ''
+)
+const fechaParaCrear = computed(() =>
+  fechaDeDiaSeleccionado.value ? fechaDeDiaSeleccionado.value.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD')
+)
+
+const formatoHora = (fecha) => (fecha ? dayjs(fecha).format('h:mm A') : '')
+const truncar = (texto, max) => (!texto ? '' : texto.length > max ? texto.slice(0, max) + '…' : texto)
+const colorSuave = (hex) => (hex ? hex + '22' : '#EFF6FF')
+
+const badgeEstado = (estado) => ({
+  pendiente: 'bg-blue-100 text-blue-700', en_curso: 'bg-indigo-100 text-indigo-700',
+  completado: 'bg-green-100 text-green-700', vencido: 'bg-red-100 text-red-700',
+  cancelado: 'bg-gray-100 text-gray-500', pospuesto: 'bg-amber-100 text-amber-700'
+}[estado] || 'bg-blue-100 text-blue-700')
+const etiquetaEstado = (estado) => ({
+  pendiente: 'Pendiente', en_curso: 'En curso', completado: 'Completado',
+  vencido: 'Vencido', cancelado: 'Cancelado', pospuesto: 'Pospuesto'
+}[estado] || estado)
+
+const recargarMes = () => {
+  const primer = dayjs(new Date(anio.value, mes.value, 1)).format('YYYY-MM-DD')
+  const ultimo = dayjs(new Date(anio.value, mes.value, 1)).endOf('month').format('YYYY-MM-DD')
+  cargar(primer, ultimo)
 }
 
-const tareasDelDia = (diaNum) => {
-  return tareas.value.filter((t) => {
-    if (!t.fecha_limite) return false
-    const fecha = dayjs(t.fecha_limite)
-    return fecha.date() === diaNum && fecha.month() === mesActual.value && fecha.year() === anioActual.value
-  })
-}
-
-const notasDelDia = (diaNum) => {
-  return notas.value.filter((n) => {
-    const fecha = dayjs(n.fecha_creacion)
-    return fecha.date() === diaNum && fecha.month() === mesActual.value && fecha.year() === anioActual.value
-  })
-}
-
-const eventosDiaSeleccionado = computed(() => {
-  if (diaSeleccionado.value === null) return []
-  return eventosDelDia(diaSeleccionado.value)
-})
-
-const tareasDiaSeleccionado = computed(() => {
-  if (diaSeleccionado.value === null) return []
-  return tareasDelDia(diaSeleccionado.value)
-})
-
-const notasDiaSeleccionado = computed(() => {
-  if (diaSeleccionado.value === null) return []
-  return notasDelDia(diaSeleccionado.value)
-})
-
-const itemsDiaSeleccionado = computed(() => {
-  return [
-    ...eventosDiaSeleccionado.value,
-    ...tareasDiaSeleccionado.value,
-    ...notasDiaSeleccionado.value
-  ]
-})
-
-const formatoHora = (fecha) => {
-  if (!fecha) return ''
-  return dayjs(fecha).format('h:mm A')
-}
-
-const truncarTexto = (texto, max) => {
-  if (!texto) return ''
-  return texto.length > max ? texto.slice(0, max) + '...' : texto
-}
-
-const mapEstado = {
-  pendiente:   { cell: 'bg-blue-50 text-blue-700',   dot: 'bg-blue-500',      badge: 'bg-blue-100 text-blue-700' },
-  en_curso:    { cell: 'bg-indigo-50 text-indigo-700', dot: 'bg-indigo-500',   badge: 'bg-indigo-100 text-indigo-700' },
-  completado:  { cell: 'bg-green-50 text-green-700',  dot: 'bg-green-500',    badge: 'bg-green-100 text-green-700' },
-  vencido:     { cell: 'bg-red-50 text-red-700',      dot: 'bg-red-500',      badge: 'bg-red-100 text-red-700' },
-  cancelado:   { cell: 'bg-gray-100 text-gray-500',   dot: 'bg-gray-400',     badge: 'bg-gray-100 text-gray-500' },
-  pospuesto:   { cell: 'bg-amber-50 text-amber-700',  dot: 'bg-amber-500',    badge: 'bg-amber-100 text-amber-700' }
-}
-
-const estadoColor = (estado) => mapEstado[estado] || mapEstado.pendiente
-
-const estadoClaseEvento = (colores) => colores
-
-const estadoEtiqueta = (estado) => {
-  const etiquetas = {
-    pendiente: 'Pendiente',
-    en_curso: 'En curso',
-    completado: 'Completado',
-    vencido: 'Vencido',
-    cancelado: 'Cancelado',
-    pospuesto: 'Pospuesto'
-  }
-  return etiquetas[estado] || estado
-}
-
-const cargarDatos = async () => {
-  cargando.value = true
-  try {
-    const primerDia = dayjs(new Date(anioActual.value, mesActual.value, 1)).format('YYYY-MM-DD')
-    const ultimoDia = dayjs(new Date(anioActual.value, mesActual.value, totalDiasMes.value)).format('YYYY-MM-DD')
-
-    const respuesta = await listarCalendario(primerDia, ultimoDia)
-    const data = respuesta.data.data || {}
-    eventos.value = data.eventos || []
-    tareas.value = data.tareas || []
-    notas.value = data.notas || []
-  } catch (error) {
-    console.error('Error al cargar calendario:', error)
-    eventos.value = []
-    tareas.value = []
-    notas.value = []
-  } finally {
-    cargando.value = false
-  }
-}
-
-onMounted(() => {
-  leerFechaQuery()
-  cargarDatos()
-})
-
-watch([anioActual, mesActual], () => {
-  cargarDatos()
-})
-
-watch(() => route.query.fecha, (nuevaFecha) => {
-  if (nuevaFecha) {
-    leerFechaQuery()
-    cargarDatos()
-  }
-})
-
-function leerFechaQuery() {
-  const f = route.query.fecha
-  if (f) {
-    const fecha = dayjs(f)
-    if (fecha.isValid()) {
-      anioActual.value = fecha.year()
-      mesActual.value = fecha.month()
-      if (!route.query.crear) {
-        diaSeleccionado.value = fecha.date()
-      }
-    }
-  }
-  if (route.query.crear) {
-    abrirFormulario(route.query.crear)
-    if (f) {
-      const fecha = dayjs(f)
-      if (fecha.isValid()) {
-        anioActual.value = fecha.year()
-        mesActual.value = fecha.month()
-      }
-    }
-  }
-}
-
-const irAHoy = () => {
-  anioActual.value = ahora.year()
-  mesActual.value = ahora.month()
-  diaSeleccionado.value = null
-  router.push({ query: {} })
-}
-
-const cambiarMes = (delta) => {
-  mesActual.value += delta
-  if (mesActual.value > 11) {
-    mesActual.value = 0
-    anioActual.value++
-  } else if (mesActual.value < 0) {
-    mesActual.value = 11
-    anioActual.value--
-  }
-}
+const crearNuevo = (tipo) => abrirCrear(tipo, fechaParaCrear.value)
 
 const seleccionarDia = (item) => {
   if (item.fueraMes) return
   diaSeleccionado.value = item.dia
-  const fecha = item.fecha.format('YYYY-MM-DD')
-  router.push({ query: { fecha } })
+  calStore.seleccionarFecha(item.fecha.format('YYYY-MM-DD'))
 }
+const cerrarDetalleDia = () => { diaSeleccionado.value = null }
 
-const cerrarDetalleDia = () => {
+onMounted(() => {
+  calStore.setVista('mes')
+  if (foco.value.isSame(dayjs(), 'month')) diaSeleccionado.value = dayjs().date()
+  recargarMes()
+})
+
+watch([anio, mes], () => {
   diaSeleccionado.value = null
-  router.push({ query: {} })
-}
-
-const abrirFormulario = (tipo) => {
-  modalTipo.value = tipo
-  formTarea.value = { titulo: '', prioridad: 'media' }
-  formNota.value = { titulo: '', contenido: '' }
-}
-
-const cerrarModal = () => {
-  modalTipo.value = null
-  if (route.query.crear) {
-    const query = { ...route.query }
-    delete query.crear
-    router.replace({ query })
-  }
-}
-
-const mapaCategoria = { work: 1, personal: 2, design: 3 }
-const mapaColorEtiqueta = { work: '#1D4ED8', personal: '#059669', design: '#7C3AED' }
-
-const guardarEvento = async (datos) => {
-  try {
-    const payload = {
-      titulo: datos.titulo,
-      fecha_inicio: datos.fechaInicio || fechaParaCrear.value + 'T09:00:00',
-      fecha_fin: datos.fechaFin || fechaParaCrear.value + 'T10:00:00',
-      ubicacion: datos.lugar || null,
-      color_etiqueta: mapaColorEtiqueta[datos.categoria] || null
-    }
-    await crearEvento(payload)
-    await cargarDatos()
-    cerrarModal()
-  } catch (error) {
-    const mensaje = error.response?.data?.message || 'Error al crear el evento'
-    alert(mensaje)
-  }
-}
-
-const guardarTarea = async () => {
-  if (!formTarea.value.titulo) {
-    alert('El título es requerido')
-    return
-  }
-  try {
-    const payload = {
-      titulo: formTarea.value.titulo,
-      fecha_limite: fechaParaCrear.value,
-      prioridad: formTarea.value.prioridad
-    }
-    await crearTarea(payload)
-    await cargarDatos()
-    cerrarModal()
-  } catch (error) {
-    const mensaje = error.response?.data?.message || 'Error al crear la tarea'
-    alert(mensaje)
-  }
-}
-
-const guardarNota = async () => {
-  if (!formNota.value.titulo) {
-    alert('El título es requerido')
-    return
-  }
-  try {
-    const payload = {
-      titulo: formNota.value.titulo,
-      contenido: formNota.value.contenido || null
-    }
-    await crearNota(payload)
-    await cargarDatos()
-    cerrarModal()
-  } catch (error) {
-    const mensaje = error.response?.data?.message || 'Error al crear la nota'
-    alert(mensaje)
-  }
-}
+  recargarMes()
+})
 </script>
 
 <style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>

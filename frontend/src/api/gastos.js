@@ -11,5 +11,10 @@ export const actualizarGasto = (id, datos) => api.put(`/gastos/${id}`, datos)
 
 export const eliminarGasto = (id) => api.delete(`/gastos/${id}`)
 
+export const listarGastosPorTarea = (tareaId) => api.get(`/gastos/tarea/${tareaId}`)
+
 export const obtenerResumenGastos = (fechaInicio, fechaFin) =>
   api.get('/gastos/resumen', { params: { fecha_inicio: fechaInicio, fecha_fin: fechaFin } })
+
+export const obtenerGastosPorMetodoPago = (fechaInicio, fechaFin) =>
+  api.get('/gastos/reportes/metodo-pago', { params: { fecha_inicio: fechaInicio, fecha_fin: fechaFin } })

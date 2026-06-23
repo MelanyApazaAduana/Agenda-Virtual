@@ -39,7 +39,7 @@ class EventoModel {
 
         // Filtro por rango de fechas
         if (filtros.fecha_inicio && filtros.fecha_fin) {
-            sql += ` AND fecha_inicio BETWEEN ? AND ?`;
+            sql += ` AND DATE(fecha_inicio) BETWEEN ? AND ?`;
             params.push(filtros.fecha_inicio, filtros.fecha_fin);
         } else if (filtros.fecha_inicio) {
             sql += ` AND DATE(fecha_inicio) = ?`;

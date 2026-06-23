@@ -33,7 +33,7 @@
             <thead class="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-widest">
               <tr>
                 <th class="text-left px-5 py-3">Fecha</th>
-                <th class="text-left px-5 py-3">Categoría</th>
+                <th class="text-left px-5 py-3">Tarea</th>
                 <th class="text-left px-5 py-3">Método de pago</th>
                 <th class="text-right px-5 py-3">Monto</th>
                 <th class="px-5 py-3"></th>
@@ -42,12 +42,7 @@
             <tbody class="divide-y divide-gray-100">
               <tr v-for="gasto in gastos" :key="gasto.id" class="hover:bg-gray-50/70">
                 <td class="px-5 py-3 text-gray-700">{{ formatoFecha(gasto.fecha) }}</td>
-                <td class="px-5 py-3">
-                  <span class="inline-flex items-center gap-2 text-gray-700">
-                    <span class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: gasto.categoria_color || '#9CA3AF' }"></span>
-                    {{ gasto.categoria_nombre || 'Sin categoría' }}
-                  </span>
-                </td>
+                <td class="px-5 py-3 text-gray-600">{{ gasto.tarea_titulo || '—' }}</td>
                 <td class="px-5 py-3 text-gray-500">{{ etiquetaMetodo(gasto.metodo_pago) }}</td>
                 <td class="px-5 py-3 text-right font-bold text-gray-900">Bs. {{ formato(gasto.monto) }}</td>
                 <td class="px-5 py-3 text-right">

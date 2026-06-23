@@ -12,7 +12,7 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
       <div>
         <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Gestión de Tareas</h1>
-        <p class="text-sm text-gray-500 mt-1">Optimiza tu flujo de trabajo con precisión algorítmica</p>
+        <p class="text-sm text-gray-500 mt-1">Optimiza tu flujo de trabajo</p>
       </div>
       <div v-if="cargando" class="flex items-center gap-2 text-sm text-gray-400">
         <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -24,133 +24,75 @@
     </div>
 
     <div class="flex gap-6 h-[calc(100%-100px)] overflow-x-auto pb-4">
-
-      <div class="w-80 shrink-0 flex flex-col">
+      <div v-for="col in columnas" :key="col.clave" class="w-80 shrink-0 flex flex-col">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full bg-red-500"></div>
-            <h3 class="font-bold text-gray-900">Vencidas</h3>
+            <div class="w-2 h-2 rounded-full" :class="col.punto"></div>
+            <h3 class="font-bold text-gray-900">{{ col.titulo }}</h3>
           </div>
-          <span class="bg-red-50 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full border border-red-100">{{ tareasVencidas.length }} TAREAS</span>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full border" :class="col.chip">{{ tareasFiltradas(col.clave).length }} TAREAS</span>
         </div>
 
         <div class="flex-1 space-y-4 overflow-y-auto no-scrollbar">
-          <div v-for="tarea in tareasFiltradas('vencidas')" :key="tarea.id" class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition cursor-pointer">
-            <label class="flex items-start gap-3">
-              <input type="checkbox" @change="completarTarea(tarea)" class="mt-0.5 rounded border-gray-300 text-red-500 focus:ring-red-500 w-4 h-4 cursor-pointer" />
-              <div>
-                <h4 class="text-sm font-bold text-gray-900 leading-tight">{{ tarea.titulo }}</h4>
+          <div v-for="tarea in tareasFiltradas(col.clave)" :key="tarea.id"
+            @click="editarTarea(tarea)"
+            class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition cursor-pointer relative overflow-hidden"
+            :class="{ 'opacity-70': tarea.estado === 'completada' }">
+            <div class="absolute top-0 left-0 w-full h-1" :style="{ backgroundColor: tarea.color_hex || '#10B981' }"></div>
+            <div class="flex items-start gap-3">
+              <input type="checkbox" :checked="tarea.estado === 'completada'" @click.stop @change="alternarCompletada(tarea)"
+                class="mt-0.5 rounded border-gray-300 w-4 h-4 cursor-pointer" :style="{ accentColor: tarea.color_hex || '#10B981' }" />
+              <div class="min-w-0">
+                <h4 class="text-sm font-bold leading-tight" :class="tarea.estado === 'completada' ? 'text-gray-500 line-through' : 'text-gray-900'">{{ tarea.titulo }}</h4>
                 <p v-if="tarea.descripcion" class="text-xs text-gray-500 mt-1.5 leading-relaxed truncate">{{ tarea.descripcion }}</p>
-                <div class="flex items-center gap-2 mt-4 text-[10px] font-bold text-red-600 tracking-wider uppercase">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                  {{ etiquetaPrioridad(tarea.prioridad) }} • {{ formatoVencimiento(tarea.fecha_limite) }}
+                <div class="flex items-center gap-2 mt-3 text-[10px] font-bold tracking-wider uppercase" :class="colorPrioridad(tarea.prioridad)">
+                  <span>{{ tarea.prioridad }}</span>
+                  <span v-if="tarea.fecha_limite" class="text-gray-400">• {{ formatoFecha(tarea.fecha_limite) }}</span>
                 </div>
               </div>
-            </label>
+            </div>
           </div>
-          <div v-if="tareasVencidas.length === 0 && !cargando" class="text-center py-8 text-gray-400 text-sm">
-            No hay tareas vencidas
+          <div v-if="tareasFiltradas(col.clave).length === 0 && !cargando" class="text-center py-8 text-gray-400 text-sm">
+            Sin tareas
           </div>
         </div>
       </div>
-
-      <div class="w-80 shrink-0 flex flex-col">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full bg-teal-500"></div>
-            <h3 class="font-bold text-gray-900">Pendientes</h3>
-          </div>
-          <span class="bg-teal-50 text-teal-700 text-xs font-bold px-2.5 py-1 rounded-full border border-teal-100">{{ tareasPendientes.length }} TAREAS</span>
-        </div>
-
-        <div class="flex-1 space-y-4 overflow-y-auto no-scrollbar">
-          <div v-for="tarea in tareasFiltradas('pendientes')" :key="tarea.id" class="bg-white p-5 rounded-xl border border-teal-200 shadow-sm hover:shadow-md transition cursor-pointer relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-teal-500"></div>
-            <label class="flex items-start gap-3">
-              <input type="checkbox" @change="completarTarea(tarea)" class="mt-0.5 rounded border-gray-300 text-teal-600 focus:ring-teal-600 w-4 h-4 cursor-pointer" />
-              <div>
-                <h4 class="text-sm font-bold text-gray-900 leading-tight">{{ tarea.titulo }}</h4>
-                <p v-if="tarea.descripcion" class="text-xs text-gray-500 mt-1.5 leading-relaxed truncate">{{ tarea.descripcion }}</p>
-                <div class="flex items-center gap-2 mt-4 text-[10px] font-bold text-teal-600 tracking-wider uppercase">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                  {{ etiquetaPrioridad(tarea.prioridad) }} • {{ formatoVencimiento(tarea.fecha_limite) }}
-                </div>
-              </div>
-            </label>
-          </div>
-          <div v-if="tareasPendientes.length === 0 && !cargando" class="text-center py-8 text-gray-400 text-sm">
-            No hay tareas pendientes
-          </div>
-        </div>
-      </div>
-
-      <div class="w-80 shrink-0 flex flex-col">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full bg-gray-400"></div>
-            <h3 class="font-bold text-gray-900">Completadas</h3>
-          </div>
-          <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full border border-gray-200">{{ tareasCompletadas.length }} TAREAS</span>
-        </div>
-
-        <div class="flex-1 space-y-4 overflow-y-auto no-scrollbar">
-          <div v-for="tarea in tareasFiltradas('completadas')" :key="tarea.id" class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition cursor-pointer opacity-70">
-            <label class="flex items-start gap-3">
-              <input type="checkbox" checked disabled class="mt-0.5 rounded border-gray-300 text-gray-600 w-4 h-4 cursor-not-allowed" />
-              <div>
-                <h4 class="text-sm font-bold text-gray-500 line-through leading-tight">{{ tarea.titulo }}</h4>
-                <p v-if="tarea.descripcion" class="text-xs text-gray-400 mt-1.5 leading-relaxed truncate line-through">{{ tarea.descripcion }}</p>
-                <div class="flex items-center gap-2 mt-4 text-[10px] font-bold text-gray-400 tracking-wider uppercase">
-                  {{ etiquetaPrioridad(tarea.prioridad) }}
-                </div>
-              </div>
-            </label>
-          </div>
-          <div v-if="tareasCompletadas.length === 0 && !cargando" class="text-center py-8 text-gray-400 text-sm">
-            No hay tareas completadas
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 
-<button @click="abrirModalTarea" class="fixed bottom-8 right-8 w-14 h-14 bg-teal-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-teal-700 hover:scale-105 transition-all z-50">
+  <button @click="abrirCrear" class="fixed bottom-8 right-8 w-14 h-14 bg-teal-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-teal-700 hover:scale-105 transition-all z-50">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
     </svg>
   </button>
 
-  <ModalCrearTarea v-if="mostrarModal" @cerrar="mostrarModal = false" @guardar="guardarTarea" />
-
-  <AppFab @crear="navegarCrear" />
+  <ModalCrearTarea v-if="modal.tipo" :modo="modal.modo" :valores="modal.valores"
+    @cerrar="cerrarModal" @guardar="guardarTarea" @eliminar="eliminarTareaItem" />
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import ModalCrearTarea from '@/components/tareas/ModalCrearTarea.vue'
-import AppFab from '@/components/ui/AppFab.vue'
-import { listarTareas, crearTarea, cambiarEstadoTarea } from '@/api/tareas.js'
+import { listarTareas, crearTarea, actualizarTarea, eliminarTarea, cambiarEstadoTarea } from '@/api/tareas.js'
+import { sincronizarEtiquetas } from '@/utils/etiquetasSync'
 
-const mostrarModal = ref(false)
 const cargando = ref(true)
-
-const router = useRouter()
-
-const navegarCrear = (tipo) => {
-  router.push({ path: '/calendario', query: { crear: tipo } })
-}
 const busqueda = ref('')
-const filtroPrioridad = ref('')
 const tareas = ref([])
+const modal = ref({ tipo: null, modo: 'crear', valores: null })
+
+const columnas = [
+  { clave: 'vencidas', titulo: 'Vencidas', punto: 'bg-red-500', chip: 'bg-red-50 text-red-600 border-red-100' },
+  { clave: 'pendientes', titulo: 'Pendientes', punto: 'bg-teal-500', chip: 'bg-teal-50 text-teal-700 border-teal-100' },
+  { clave: 'completadas', titulo: 'Completadas', punto: 'bg-gray-400', chip: 'bg-gray-100 text-gray-600 border-gray-200' }
+]
 
 const cargarTareas = async () => {
   cargando.value = true
   try {
-    const respuesta = await listarTareas()
-    tareas.value = respuesta.data.data || []
+    const { data } = await listarTareas()
+    tareas.value = data.data || []
   } catch (error) {
     console.error('Error al cargar tareas:', error)
     tareas.value = []
@@ -158,65 +100,34 @@ const cargarTareas = async () => {
     cargando.value = false
   }
 }
+onMounted(cargarTareas)
 
-onMounted(() => {
-  cargarTareas()
-})
-
-const tareasVencidas = computed(() => {
-  return tareas.value.filter(t => {
-    if (t.estado === 'completada' || t.estado === 'cancelada') return false
-    if (!t.fecha_limite) return false
-    return dayjs(t.fecha_limite).isBefore(dayjs(), 'day')
-  })
-})
-
-const tareasPendientes = computed(() => {
-  return tareas.value.filter(t => {
-    if (t.estado === 'completada' || t.estado === 'cancelada') return false
-    if (!t.fecha_limite) return true
-    return !dayjs(t.fecha_limite).isBefore(dayjs(), 'day')
-  })
-})
-
-const tareasCompletadas = computed(() => {
-  return tareas.value.filter(t => t.estado === 'completada')
-})
+const tareasVencidas = computed(() => tareas.value.filter(t =>
+  !['completada', 'cancelada'].includes(t.estado) && t.fecha_limite && dayjs(t.fecha_limite).isBefore(dayjs(), 'day')
+))
+const tareasPendientes = computed(() => tareas.value.filter(t =>
+  !['completada', 'cancelada'].includes(t.estado) && (!t.fecha_limite || !dayjs(t.fecha_limite).isBefore(dayjs(), 'day'))
+))
+const tareasCompletadas = computed(() => tareas.value.filter(t => t.estado === 'completada'))
 
 const tareasFiltradas = (columna) => {
-  let lista
-  if (columna === 'vencidas') lista = tareasVencidas.value
-  else if (columna === 'pendientes') lista = tareasPendientes.value
-  else if (columna === 'completadas') lista = tareasCompletadas.value
-  else lista = []
-
+  let lista = columna === 'vencidas' ? tareasVencidas.value
+    : columna === 'pendientes' ? tareasPendientes.value
+    : columna === 'completadas' ? tareasCompletadas.value : []
   if (busqueda.value) {
     const q = busqueda.value.toLowerCase()
     lista = lista.filter(t => t.titulo?.toLowerCase().includes(q) || t.descripcion?.toLowerCase().includes(q))
   }
-  if (filtroPrioridad.value) {
-    lista = lista.filter(t => t.prioridad === filtroPrioridad.value)
-  }
   return lista
 }
 
-const cambiarFiltroPrioridad = () => {
-  const opciones = ['', 'urgente', 'alta', 'media', 'baja']
-  const idx = opciones.indexOf(filtroPrioridad.value)
-  filtroPrioridad.value = opciones[(idx + 1) % opciones.length]
-}
+const colorPrioridad = (p) => ({
+  urgente: 'text-purple-600', alta: 'text-red-600', media: 'text-orange-600', baja: 'text-teal-600'
+}[p] || 'text-gray-500')
 
-const etiquetaPrioridad = (prioridad) => {
-  const mapa = { urgente: 'Urgente', alta: 'Alta', media: 'Media', baja: 'Baja' }
-  return mapa[prioridad] || prioridad
-}
+const formatoFecha = (fecha) => (fecha ? dayjs(fecha).format('DD/MM/YYYY') : 'Sin fecha')
 
-const formatoVencimiento = (fecha) => {
-  if (!fecha) return 'Sin fecha'
-  return dayjs(fecha).format('DD/MM/YYYY')
-}
-
-const completarTarea = async (tarea) => {
+const alternarCompletada = async (tarea) => {
   try {
     const nuevoEstado = tarea.estado === 'completada' ? 'por_hacer' : 'completada'
     await cambiarEstadoTarea(tarea.id, nuevoEstado)
@@ -226,33 +137,40 @@ const completarTarea = async (tarea) => {
   }
 }
 
-const abrirModalTarea = () => {
-  mostrarModal.value = true
+const abrirCrear = () => { modal.value = { tipo: 'tarea', modo: 'crear', valores: null } }
+const editarTarea = (tarea) => { modal.value = { tipo: 'tarea', modo: 'editar', valores: tarea } }
+const cerrarModal = () => { modal.value = { tipo: null, modo: 'crear', valores: null } }
+
+const guardarTarea = async (payload) => {
+  try {
+    const cuerpo = {
+      titulo: payload.titulo, descripcion: payload.descripcion,
+      prioridad: payload.prioridad, fecha_limite: payload.fecha_limite, color_hex: payload.color_hex
+    }
+    let id
+    if (modal.value.modo === 'editar') {
+      id = modal.value.valores.id
+      if (payload.estado) cuerpo.estado = payload.estado
+      await actualizarTarea(id, cuerpo)
+    } else {
+      const { data } = await crearTarea(cuerpo)
+      id = data.data.id
+    }
+    await sincronizarEtiquetas('tarea', id, payload.etiquetas, payload.etiquetasPrevias)
+    cerrarModal(); await cargarTareas()
+  } catch (error) {
+    alert(error.response?.data?.message || 'Error al guardar la tarea')
+  }
 }
 
-const guardarTarea = async (datos) => {
-  try {
-    const payload = {
-      titulo: datos.nombre,
-      descripcion: datos.descripcion || null,
-      prioridad: datos.prioridad || 'media',
-      fecha_limite: datos.fechaVencimiento || null
-    }
-    await crearTarea(payload)
-    mostrarModal.value = false
-  } catch (error) {
-    const mensaje = error.response?.data?.message || 'Error al crear la tarea'
-    alert(mensaje)
-  }
+const eliminarTareaItem = async (id) => {
+  if (!confirm('¿Eliminar esta tarea?')) return
+  try { await eliminarTarea(id); cerrarModal(); await cargarTareas() }
+  catch (e) { alert('No se pudo eliminar la tarea') }
 }
 </script>
 
 <style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
