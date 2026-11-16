@@ -1,0 +1,32 @@
+# Dependencias
+node_modules/
+package-lock.json
+
+# Base de datos local
+*.sql
+*.db
+# ...pero el esquema del proyecto SÍ se versiona (initDb lo usa al arrancar)
+!backend/migrations/init.sql
+
+# Variables de entorno
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Builds
+dist/
+build/
+
+# Backend
+backend/uploads/
