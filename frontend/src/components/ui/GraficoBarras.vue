@@ -2,7 +2,7 @@
   <div>
     <div class="flex items-end gap-3 h-40">
       <div v-for="(barra, i) in barras" :key="i" class="flex-1 flex flex-col items-center gap-1 group">
-        <div class="w-full flex flex-col justify-end h-full">
+        <div class="w-full flex flex-col justify-end h-36">
           <div class="w-full rounded-t-md transition-all" :style="{ height: altura(barra.valor) + '%', backgroundColor: barra.color || '#10B981' }"
             :title="formato(barra.valor)"></div>
         </div>

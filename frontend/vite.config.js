@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url'
 const backend = { target: 'http://localhost:3000', changeOrigin: true }
 const prefijosApi = [
   '/auth', '/eventos', '/tareas', '/etiquetas', '/notas', '/recordatorios',
-  '/gastos', '/ingresos', '/presupuestos', '/recurrencias', '/calendario',
+  '/gastos', '/ingresos', '/presupuestos', '/recurrencias', '/reportes', '/calendario',
   '/productividad', '/uploads', '/api'
 ]
 

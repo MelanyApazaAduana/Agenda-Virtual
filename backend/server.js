@@ -22,7 +22,7 @@ import { CARPETA_UPLOADS } from './config/uploads.js';
 
 import calendarioRoutes from './routes/calendarioRoutes.js';
 import productividadRoutes from './routes/productividadRoutes.js';
-
+import reporteRoutes from './routes/reporteRoutes.js';
 
 import { testConnection } from './config/database.js'
 import { inicializarBaseDeDatos } from './config/initDb.js'
@@ -83,6 +83,8 @@ app.use('/uploads', uploadRoutes);
 app.use('/calendario',calendarioRoutes);
 
 app.use('/productividad',productividadRoutes);
+
+app.use('/reportes', reporteRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {

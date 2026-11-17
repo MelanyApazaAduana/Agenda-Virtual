@@ -1,3 +1,4 @@
+
 # Dependencias
 node_modules/
 package-lock.json
@@ -5,7 +6,7 @@ package-lock.json
 # Base de datos local
 *.sql
 *.db
-# ...pero el esquema del proyecto SÍ se versiona (initDb lo usa al arrancar)
+# Excepción: conservar el esquema inicial
 !backend/migrations/init.sql
 
 # Variables de entorno
@@ -30,3 +31,8 @@ build/
 
 # Backend
 backend/uploads/
+
+# Configuraciones e instrucciones de herramientas de IA
+.agents/
+.claude/
+CLAUDE.md

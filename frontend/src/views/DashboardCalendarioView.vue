@@ -20,7 +20,7 @@
           v-for="(item, idx) in diasCalendario" :key="idx"
           @click="seleccionarDia(item)"
           class="bg-white p-2 flex flex-col hover:bg-gray-50 transition min-h-[90px] cursor-pointer relative"
-          :class="{ 'ring-2 ring-black ring-inset': item.esSeleccionado && !item.fueraMes }"
+              :class="{ 'ring-1 ring-[var(--accent)] ring-inset': item.esSeleccionado && !item.fueraMes }"
         >
           <span
             class="text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full mb-1"
@@ -59,7 +59,7 @@
             {{ tituloDiaSeleccionado }}
             <span v-if="itemsDiaSeleccionado.length" class="text-gray-400 font-normal ml-1">· {{ itemsDiaSeleccionado.length }} registros</span>
           </h3>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 pr-24">
             <button @click="crearNuevo('evento')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">+ Evento</button>
             <button @click="crearNuevo('tarea')" class="px-3 py-1.5 text-xs font-semibold bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition">+ Tarea</button>
             <button @click="crearNuevo('nota')" class="px-3 py-1.5 text-xs font-semibold bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition">+ Nota</button>

@@ -18,6 +18,7 @@ const RecordatoriosView = () => import('@/views/RecordatoriosView.vue')
 const RecurrenciasView = () => import('@/views/RecurrenciasView.vue')
 const IngresosView = () => import('@/views/IngresosView.vue')
 const PresupuestosView = () => import('@/views/PresupuestosView.vue')
+const ReporteEconomicoView = () => import('@/views/ReporteEconomicoView.vue')
 
 const routes = [
   {
@@ -130,6 +131,12 @@ const routes = [
     path: '/gastos',
     name: 'gastos',
     component: GestionGastosView,
+    meta: { layout: 'DashboardLayout', requiereAuth: true }
+  },
+  {
+    path: '/reportes/economico',
+    name: 'reporte-economico',
+    component: ReporteEconomicoView,
     meta: { layout: 'DashboardLayout', requiereAuth: true }
   }
 ]

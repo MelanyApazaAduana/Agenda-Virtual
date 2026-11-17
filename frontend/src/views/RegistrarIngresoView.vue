@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+  <div class="min-h-full bg-slate-50 flex items-center justify-center p-6 font-sans">
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-md overflow-hidden">
 
       <div class="px-6 pt-6 pb-2">

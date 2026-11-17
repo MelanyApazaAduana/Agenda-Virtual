@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-800">
-    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
-      <AppHeader @cerrarSesion="cerrarSesion" @irAPerfil="irAPerfil" />
-    </header>
-    <div class="flex flex-1 overflow-hidden">
-      <AppSidebar/>
-      <main class="flex-1 overflow-y-auto">
+  <div class="h-screen bg-[var(--bg)] flex overflow-hidden font-sans text-[var(--text-2)]">
+    <AppSidebar/>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <header class="h-14 bg-[var(--header-bg)] backdrop-blur-md border-b border-[var(--border)] flex items-center justify-between px-4 shrink-0">
+        <AppHeader @cerrarSesion="cerrarSesion" @irAPerfil="irAPerfil" />
+      </header>
+      <main class="flex-1 overflow-y-auto bg-[var(--bg)]">
         <router-view />
       </main>
     </div>

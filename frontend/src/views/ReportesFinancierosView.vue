@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-full">
-    <header class="h-20 bg-white flex items-center justify-between px-8 shrink-0 border-b border-gray-100">
+    <header class="h-14 bg-white flex items-center justify-between px-8 shrink-0 border-b border-gray-100">
       <span class="font-bold text-lg tracking-wide text-gray-900">Reportes Financieros</span>
       <div class="flex items-center gap-3">
         <select v-model="mesSeleccionado" @change="cargar" class="input-base w-auto py-1.5">

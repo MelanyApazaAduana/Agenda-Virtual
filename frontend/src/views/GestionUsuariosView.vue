@@ -1,13 +1,4 @@
 <template>
-  <header class="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 shrink-0">
-    <div class="flex items-center gap-4">
-      <h1 class="font-bold text-lg tracking-wide text-gray-900">Dashboard <span class="text-gray-300 font-normal mx-1">/</span> Users & Security</h1>
-    </div>
-    <div class="flex items-center gap-4">
-      <button class="w-8 h-8 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-full cursor-pointer shadow-sm"></button>
-    </div>
-  </header>
-
   <div class="flex-1 overflow-y-auto p-8">
 
     <div class="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3 flex items-center gap-2 mb-6">

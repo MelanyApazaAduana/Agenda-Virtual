@@ -29,14 +29,14 @@
                 <label class="label-campo">Monto total</label>
                 <div class="relative">
                   <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-sm">Bs.</span>
-                  <input v-model="form.monto_total" type="number" step="0.01" min="0" class="input-base pl-12" />
+                  <input v-model="form.monto_total" type="number" step="0.01" min="0" class="input-base" style="padding-left: 3rem" />
                 </div>
               </div>
               <div>
                 <label class="label-campo">Límite personalizado (opcional)</label>
                 <div class="relative">
                   <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-sm">Bs.</span>
-                  <input v-model="form.limite_personalizado" type="number" step="0.01" min="0" class="input-base pl-12" />
+                  <input v-model="form.limite_personalizado" type="number" step="0.01" min="0" class="input-base" style="padding-left: 3rem" />
                 </div>
               </div>
             </div>

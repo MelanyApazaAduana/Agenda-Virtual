@@ -1,8 +1,4 @@
 <template>
-  <header class="h-20 bg-white border-b border-gray-100 flex items-center px-8 shrink-0">
-    <h1 class="font-bold text-lg tracking-wide text-gray-900">Dashboard <span class="text-gray-300 font-normal mx-1">/</span> Etiquetas</h1>
-  </header>
-
   <div class="flex-1 overflow-y-auto p-8">
     <div class="mb-8">
       <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Etiquetas</h2>

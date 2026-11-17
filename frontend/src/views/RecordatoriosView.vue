@@ -1,20 +1,16 @@
 <template>
-  <header class="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 shrink-0">
-    <h1 class="font-bold text-lg tracking-wide text-gray-900">Dashboard <span class="text-gray-300 font-normal mx-1">/</span> Recordatorios</h1>
-    <div class="flex items-center gap-3">
-      <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-        <input type="checkbox" v-model="soloPendientes" @change="cargar" class="rounded accent-black w-4 h-4" />
-        Solo pendientes
-      </label>
-      <button @click="limpiarViejos" class="text-xs font-semibold text-gray-500 hover:text-gray-800 transition">Limpiar viejos</button>
-    </div>
-  </header>
-
   <div class="flex-1 overflow-y-auto p-8">
     <div class="flex items-end justify-between mb-8">
       <div>
         <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Recordatorios</h2>
         <p class="text-sm text-gray-500 mt-1">Tus alertas programadas para eventos y tareas.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+          <input type="checkbox" v-model="soloPendientes" @change="cargar" class="rounded accent-black w-4 h-4" />
+          Solo pendientes
+        </label>
+        <button @click="limpiarViejos" class="text-xs font-semibold text-gray-500 hover:text-gray-800 transition">Limpiar viejos</button>
       </div>
     </div>
 

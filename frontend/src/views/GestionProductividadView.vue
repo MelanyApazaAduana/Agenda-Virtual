@@ -1,6 +1,6 @@
 <template>
-  <header class="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-8 shrink-0">
-    <h1 class="font-bold text-lg tracking-wide text-gray-900">Dashboard <span class="text-gray-300 font-normal mx-1">/</span> Productividad</h1>
+  <header class="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-8 shrink-0">
+    <h1 class="font-bold text-lg tracking-wide text-gray-900">Productividad</h1>
     <button @click="cargar" :disabled="cargando"
       class="text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-1.5 transition disabled:opacity-50">
       Actualizar

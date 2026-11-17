@@ -60,7 +60,7 @@
     </div>
   </div>
 
-  <button @click="abrirCrear" class="fixed bottom-8 right-8 w-14 h-14 bg-teal-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-teal-700 hover:scale-105 transition-all z-50">
+      <button @click="abrirCrear" class="fixed bottom-8 right-8 w-14 h-14 bg-[var(--accent)] text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-[var(--accent-hover)] hover:scale-105 transition-all z-50">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
     </svg>

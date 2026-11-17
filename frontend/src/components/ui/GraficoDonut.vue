@@ -2,7 +2,7 @@
   <div class="flex items-center gap-6">
     <div class="relative w-36 h-36 shrink-0">
       <div class="w-full h-full rounded-full" :style="{ background: gradiente }"></div>
-      <div class="absolute inset-[18%] bg-white rounded-full flex flex-col items-center justify-center">
+      <div class="absolute inset-[18%] bg-[var(--bg-sidebar)] rounded-full flex flex-col items-center justify-center">
         <span class="text-lg font-bold text-gray-900">{{ totalFormateado }}</span>
         <span class="text-[10px] text-gray-400 uppercase tracking-wider">Total</span>
       </div>
@@ -40,7 +40,7 @@ const formato = (n) => Number(n).toLocaleString('en-US', { minimumFractionDigits
 const totalFormateado = computed(() => formato(total.value))
 
 const gradiente = computed(() => {
-  if (!total.value) return '#E5E7EB'
+  if (!total.value) return 'var(--border)'
   let acc = 0
   const partes = segmentos.value.map((d) => {
     const ini = (acc / total.value) * 360

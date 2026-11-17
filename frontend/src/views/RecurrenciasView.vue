@@ -1,8 +1,4 @@
 <template>
-  <header class="h-20 bg-white border-b border-gray-100 flex items-center px-8 shrink-0">
-    <h1 class="font-bold text-lg tracking-wide text-gray-900">Dashboard <span class="text-gray-300 font-normal mx-1">/</span> Recurrencias</h1>
-  </header>
-
   <div class="flex-1 overflow-y-auto p-8">
     <div class="max-w-3xl">
       <div class="flex items-end justify-between mb-8">

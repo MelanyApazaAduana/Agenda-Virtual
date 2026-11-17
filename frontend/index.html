@@ -4,7 +4,28 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#08090A" />
     <title>Agenda Virtual</title>
+    <script>
+      ;(() => {
+        try {
+          const guardado = localStorage.getItem('agenda-tema')
+          const tema =
+            guardado === 'light' || guardado === 'dark' ? guardado : 'dark'
+          document.documentElement.dataset.theme = tema
+          document.querySelector('meta[name="theme-color"]').setAttribute(
+            'content',
+            tema === 'light' ? '#F7F8F8' : '#08090A'
+          )
+        } catch {
+          document.documentElement.dataset.theme = 'dark'
+        }
+      })()
+    </script>
+    <style>
+      html { background: #08090a; }
+      html[data-theme="light"] { background: #f7f8f8; }
+    </style>
   </head>
   <body>
     <div id="app"></div>
